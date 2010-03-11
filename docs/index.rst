@@ -1,0 +1,522 @@
+Welcome to python-prctl's documentation!
+========================================
+
+The linux prctl function allows you to control specific characteristics of a
+process' behaviour. Usage of the function is fairly messy though, due to
+limitations in C and linux. This module provides a nice non-messy python(ic)
+interface. Most of the text in this documentation is based on text from the
+linux manpages :manpage:`prctl(2)` and :manpage:`capabilities(7)`
+
+:mod:`prctl` -- Control process attributes
+==========================================
+.. module:: prctl
+   :platform: Linux (2.6.25 or newer)
+   :synopsis: Control process attributes
+.. moduleauthor:: Dennis Kaarsemaker <dennis@kaarsemaker.net>
+
+.. function:: set_dumpable(flag)
+
+  Set the state of the flag determining whether core dumps are produced for
+  this process upon delivery of a signal whose default behavior is to produce a
+  core dump. (Normally this flag is set for a process by default, but it is
+  cleared when a set-user-ID or set-group-ID program is executed and also by
+  various system calls that manipulate process UIDs and GIDs).
+
+.. function:: get_dumpable()
+
+  Return the state of the dumpable flag.
+
+.. function:: set_endian(endiannes)
+
+  Set the endian-ness of the calling process. Valid values are
+  :const:`~prctl.ENDIAN_BIG`, :const:`~prctl.ENDIAN_LITTLE` and 
+  :const:`~prctl.ENDIAN_PPC_LITTLE` (PowerPC pseudo little endian).
+
+  .. note:: 
+
+    This function only works on PowerPC systems. An :exc:`OSError` is raised
+    when called on other systems.
+
+.. function:: get_endian()
+
+  Return the endian-ness of the calling process, see :func:`set_endian`.
+
+.. function:: set_fpemu(flag)
+
+  Set floating-point emulation control flag. Pass :const:`~prctl.FPEMU_NOPRINT`
+  to silently emulate fp operations accesses, or :const:`~prctl.FPEMU_SIGFPE`
+  to not emulate fp operations and send :const:`~signal.SIGFPE` instead.
+
+  .. note:: 
+
+    This function only works on ia64 systems. An :exc:`OSError` is raised
+    when called on other systems.
+
+.. function:: get_fpemu()
+
+  Get floating-point emulation control flag. See :func:`set_fpemu`.
+
+.. function:: set_fpexc(mode)
+
+  Set floating-point exception mode. Pass :const:`FP_EXC_SW_ENABLE` to use
+  FPEXC for FP exception, :const:`FP_EXC_DIV` for floating-point divide by
+  zero, :const:`FP_EXC_OVF` for floating-point overflow, :const:`FP_EXC_UND`
+  for floating-point underflow, :const:`FP_EXC_RES` for floating-point inexact
+  result, :const:`FP_EXC_INV` for floating-point invalid operation,
+  :const:`FP_EXC_DISABLED` for FP exceptions disabled, :const:`FP_EXC_NONRECOV`
+  for async non-recoverable exception mode, :const:`FP_EXC_ASYNC` for async
+  recoverable exception mode, :const:`FP_EXC_PRECISE` for precise exception
+  mode. Modes can be combined with the :keyword:`|` operator.
+
+  .. note:: 
+
+    This function only works on PowerPC systems. An :exc:`OSError` is raised
+    when called on other systems.
+
+.. function:: get_fpexc()
+
+  Return the floating-point exception mode as a bitmap of enabled modes. See
+  :func:`set_fpexc`.
+
+.. function:: set_keepcaps(flag)
+
+  Set the state of the thread's "keep capabilities" flag, which determines
+  whether the threads's effective and permitted capability sets are cleared
+  when a change is made to the threads's user IDs such that the threads's real
+  UID, effective UID, and saved set-user-ID all become non-zero when at least
+  one of them previously had the value 0. (By default, these credential sets
+  are cleared). This value will be reset to :const:`False` on subsequent calls
+  to :func:`execve`.
+
+.. function:: set_name(flag)
+
+  Set the process name for the calling process, the name can be up to 16 bytes
+  long. This name is displayed in the output of :command:`ps` and
+  :command:`top`. The initial value is the name of the executable. For python
+  applications this will likely be :command:`python`.
+
+  .. note::
+    Use :func:`set_proctitle` to set the name that's shown with :func:`ps aux`
+    and :func:`top -c`
+
+.. function:: get_name()
+
+  Return the (first 16 bytes of) the name for the calling process.
+
+.. function:: set_proctitle(title)
+
+  Set the process name for the calling process by overwriting the C-level
+  :cdata:`**argv` variable. The original value of :cdata:`**argv` is then no
+  longer visible. in :command:`ps`, :command:`proc`, or
+  :file:`/proc/self/cmdline`.
+
+  Names longer that what fits in :cdata:`**argv` will be silently truncated. To
+  set a longer title, make your application accept bogus arguments and call the
+  application with these arguments.
+
+  .. note::
+
+    This function is not actually part of the standard :func:`pctrl` syscall,
+    but was added because it nicely complements :func:`set_name`.
+
+.. function:: set_pdeathsig(signal)
+
+  Set the parent process death signal of the calling process (either a valid
+  signal value from the :mod:`signal` module, or 0 to clear). This is the
+  signal that the calling process will get when its parent dies. This value is
+  cleared for the child of a :func:`fork`.
+
+.. function:: get_pdeathsig()
+
+  Return the current value of the parent process death signal. See
+  :func:`set_pdeathsig`.
+
+.. function:: set_seccomp(mode)
+
+  Set the secure computing mode for the calling thread. In the current
+  implementation, mode must be :const:`True`. After the secure computing mode
+  has been set to :const:`True`, the only system calls that the thread is
+  permitted to make are :func:`read`, :func:`write`, :func:`_exit`, and
+  :func:`sigreturn`. Other system calls result in the delivery of a
+  :const:`~signal.SIGKILL` signal. Secure computing mode is useful for
+  number-crunching applications that may need to execute untrusted byte code,
+  perhaps obtained by reading from a pipe or socket. This operation is only
+  available if the kernel is configured with :const:`CONFIG_SECCOMP` enabled.
+
+.. function:: get_seccomp()
+
+  Return the secure computing mode of the calling thread. Not very useful for
+  the current implementation, but may be useful for other possible future
+  modes: if the caller is not in secure computing mode, this operation returns
+  False; if the caller is in secure computing mode, then the :func:`prctl` call
+  will cause a :const:`~signal.SIGKILL` signal to be sent to the process. This
+  operation is only available if the kernel is configured with
+  :const:`CONFIG_SECCOMP` enabled.
+
+.. function:: set_timing(flag)
+
+  Set whether to use (normal, traditional) statistical process timing or
+  accurate timestamp based process timing, by passing
+  :const:`~prctl.TIMING_STATISTICAL` or :const:`~prctl.PR_TIMING_TIMESTAMP`.
+  :const:`~prctl.TIMING_TIMESTAMP` is not currently implemented (attempting to
+  set this mode will cause an :exc:`OSError`).
+
+.. function:: get_timing()
+
+   Return which process timing method is currently in use.
+
+.. function:: set_tsc(flag)
+
+  Set the state of the flag determining whether the timestamp counter can be
+  read by the process. Pass :const:`~prctl.TSC_ENABLE` to allow it to be read,
+  or :const:`~prctl.TSC_SIGSEGV` to generate a :const:`SIGSEGV` when the
+  process tries to read the timestamp counter.
+
+  .. note:: 
+
+    This function only works on x86 systems. An :exc:`OSError` is raised when
+    called on other systems.
+
+.. function:: get_tsc()
+
+  Return the state of the flag determining whether the timestamp counter can be
+  read, see :func:`set_tsc`.
+
+.. function:: set_unalign(flag)
+
+  Set unaligned access control flag. Pass :const:`~prctl.UNALIGN_NOPRINT` to
+  silently fix up unaligned user accesses, or :const:`~prctl.UNALIGN_SIGBUS` to
+  generate :const:`SIGBUS` on unaligned user access.  
+
+  .. note:: 
+
+    This function only works on ia64, parisc, PowerPC and Alpha systems. An
+    :exc:`OSError` is raised when called on other systems.
+
+.. function:: get_unalign
+
+  Return unaligned access control bits, see :func:`set_unalign`.
+
+.. function:: set_securebits(bitmap)
+  
+  Set the "securebits" flags of the calling thread. 
+
+  .. note:: 
+
+    It is not recommended to use this function directly, use the
+    :data:`~prctl.securebits` object instead.
+
+.. function:: get_securebits()
+  
+  Get the "securebits" flags of the calling thread. 
+
+  .. note:: 
+
+    As with :func:`set_securebits`, it is not recommended to use this function
+    directly, use the :data:`~prctl.securebits` object instead.
+
+.. function:: capbset_read(capability)
+
+  Return whether the specified capability is in the calling thread's capability
+  bounding set. The capability bounding set dictates whether the process can
+  receive the capability through a file's permitted capability set on a
+  subsequent call to :func:`execve`. An :exc:`OSError` will be raised when an
+  invalid capability is specified.
+
+  .. note:: 
+
+    It is not recommended to use this function directly, use the
+    :data:`~prctl.capbset` object instead.
+
+.. function:: capbset_drop(capability)
+
+  If the calling thread has the :const:`~prctl.CAP_SETPCAP` capability, then
+  drop the specified capability specified by from  the  calling  thread's
+  capability bounding set. Any children of the calling thread will inherit the
+  newly reduced bounding set.
+
+  An :exc:`OSError` will be raised if the calling thread does not have the
+  :const:`~prctl.CAP_SETPCAP` capability or when the specified capability is
+  invalid or when capabilities are not enabled in the kernel.
+
+  .. note:: 
+
+    As with :func:`capbset_read`, it is not recommended to use this function
+    directly, use the :data:`~prctl.capbset` object instead.
+
+:data:`prctl.capbset` -- The capability bounding set
+====================================================
+
+The :data:`~prctl.capbset` object represents the current capability bounting
+set of the process. The capability bounding set dictates whether the process
+can receive the capability through a file's permitted capability set on a
+subsequent call to :func:`execve`.
+
+The :data:`~prctl.capbset` object has a number of attributes, all of which are
+properties. They can only be set to :const:`False`, this drops them from the
+capability bounding set. All attributes are :const:`True` by default, unless a
+parent process already removed them from the bounding set.
+
+All details about capabilities and capability bounding sets can be found in the
+:manpage:`capabilities(7)` manpage, on which most text below is based.
+
+These are the attributes:
+
+:attr:`audit_control`
+  Enable and disable kernel auditing; change auditing filter rules; retrieve
+  auditing status and filtering rules.
+
+:attr:`audit_write`
+  Write records to kernel auditing log.
+
+:attr:`chown`
+  Make arbitrary changes to file UIDs and GIDs (see :manpage:`chown(2)`).
+
+:attr:`dac_override`
+  Bypass file read, write, and execute permission checks.  (DAC is an
+  abbreviation of "discretionary access control".)
+
+:attr:`dac_read_search`
+  Bypass file read permission checks and directory read and execute permission
+  checks.
+
+:attr:`fowner`
+  * Bypass  permission  checks  on  operations  that  normally require the file
+    system UID of the process to match the UID of the file (e.g.,
+    :func:`chmod`, :func:`utime`), excluding those operations covered by
+    :attr:`dac_override` and :attr:`dac_read_search`.
+  * Set extended file attributes (see :manpage:`chattr(1)`) on arbitrary files.
+  * Set Access Control Lists (ACLs) on arbitrary files.
+  * Ignore directory sticky bit on file deletion.
+  * Specify :const:`O_NOATIME` for arbitrary files in :func:`open` and
+    :func:`fcntl`.
+
+:attr:`fsetid`
+  Don't clear set-user-ID and set-group-ID permission bits when a file is
+  modified; set the set-group-ID bit for a file whose  GID  does  not match the
+  file system or any of the supplementary GIDs of the calling process.
+
+:attr:`ipc_lock`
+  Lock memory (:func:`mlock`, :func:`mlockall`, :func:`mmap`, :func:`shmctl`).
+
+:attr:`ipc_owner`
+  Bypass permission checks for operations on System V IPC objects.
+
+:attr:`kill`
+  Bypass permission checks for sending signals (see :manpage:`kill(2)`). This
+  includes use of the :func:`ioctl` :const:`KDSIGACCEPT` operation.
+
+:attr:`lease`
+  Establish leases on arbitrary files (see :manpage:`fcntl(2)`).
+
+:attr:`linux_immutable`
+  Set the :const:`FS_APPEND_FL` and :const:`FS_IMMUTABLE_FL` i-node flags (see
+  :manpage:`chattr(1)`).
+
+:attr:`mac_admin`
+  Override Mandatory Access Control (MAC). Implemented for the Smack Linux
+  Security Module (LSM).
+
+:attr:`mac_override`
+  Allow MAC configuration or state changes. Implemented for the Smack LSM.
+
+.. The above two were copied from the manpage, but they seem to be swapped. Hmm...
+
+:attr:`mknod`
+  Create special files using :func:`mknod`.
+
+:attr:`net_admin`
+  Perform various network-related operations (e.g., setting privileged socket
+  options, enabling multicasting, interface configuration, modifying routing
+  tables).
+
+:attr:`net_bind_service`
+  Bind a socket to Internet domain privileged ports (port numbers less than
+  1024).
+
+:attr:`net_broadcast`
+  (Unused) Make socket broadcasts, and listen to multicasts.
+
+:attr:`net_raw`
+  Use :const:`RAW` and :const:`PACKET` sockets.
+
+:attr:`setgid`
+  Make arbitrary manipulations of process GIDs and supplementary GID list;
+  forge GID when passing socket credentials via Unix domain sockets.
+
+:attr:`setfcap`
+  Set file capabilities.
+
+:attr:`setpcap`
+  If file capabilities are not supported: grant or remove any capability in the
+  caller's permitted capability set to or from any other process. (This
+  property of :attr:`setpcap` is not available when the kernel is configured to
+  support file capabilities, since :attr:`setpcap` has entirely different
+  semantics for such kernels.)
+
+  If file capabilities are supported: add any capability from the calling
+  thread's bounding set to its  inheritable  set;  drop  capabilities from the
+  bounding set (via :func:`~prctl.capbset_drop`); make changes to the
+  securebits flags.
+
+:attr:`setuid`
+  Make arbitrary manipulations of process UIDs (:func:`setuid`,
+  :func:`setreuid`, :func:`setresuid`, :func:`setfsuid`); make forged UID when
+  passing socket credentials via Unix domain sockets.
+
+:attr:`sys_admin`
+  * Perform a range of system administration operations including:
+    :func:`quotactl`, func:`mount`, :func:`umount`, :func:`swapon`,
+    :func:`swapoff`, :func:`sethostname`, and :func:`setdomainname`.
+  * Perform :const:`IPC_SET` and :const:`IPC_RMID` operations on arbitrary
+    System V IPC objects.
+  * Perform operations on trusted and security Extended Attributes (see
+    :manpage:`attr(5)`).
+  * Use :func:`lookup_dcookie`.
+  * Use :func:`ioprio_set` to assign the :const:`IOPRIO_CLASS_RT` scheduling
+    class.
+  * Forge UID when passing socket credentials.
+  * Exceed :file:`/proc/sys/fs/file-max`, the system-wide limit on the number
+    of open files, in system calls that open files (e.g., :func:`accept`,
+    :func:`execve`, :func:`open`, :func:`pipe`).
+  * Employ :const:`CLONE_NEWNS` flag with :func:`clone` and :func:`unshare`.
+  * Perform :const:`KEYCTL_CHOWN` and :const:`KEYCTL_SETPERM` :func:`keyctl`
+    operations.
+
+:attr:`sys_boot`
+  Use :func:`reboot` and :func:`kexec_load`.
+
+:attr:`sys_chroot`
+  Use :func:`chroot`.
+
+:attr:`sys_module`
+  Load and unload kernel modules (see :manpage:`init_module(2)` and
+  :manpage:`delete_module(2)`).
+
+:attr:`sys_nice`
+  * Raise process nice value (:func:`nice`, :func:`setpriority`) and change the
+    nice value for arbitrary processes.
+  * Set real-time scheduling policies for calling process, and set scheduling
+    policies and priorities for arbitrary processes
+    (:func:`sched_setscheduler`, :func:`sched_setparam`).
+  * Set CPU affinity for arbitrary processes (:func:`sched_setaffinity`)
+  * Set I/O scheduling class and priority for arbitrary processes
+    (:func:`ioprio_set`).
+  * Apply :func:`migrate_pages` to arbitrary processes and allow processes to
+    be migrated to arbitrary nodes.
+  * Apply :func:`move_pages` to arbitrary processes.
+  * Use the :const:`MPOL_MF_MOVE_ALL` flag with :func:`mbind` and
+    :func:`move_pages`.
+
+:attr:`sys_pacct`
+  Use :func:`acct`.
+
+:attr:`sys_ptrace`
+  Trace arbitrary processes using :func:`ptrace`.
+
+:attr:`sys_rawio`
+  Perform I/O port operations (:func:`iopl` and :func:`ioperm`); access
+  :file:`/proc/kcore`.
+
+:attr:`sys_resource`
+  * Use reserved space on ext2 file systems.
+  * Make :func:`ioctl` calls controlling ext3 journaling.
+  * Override disk quota limits.
+  * Increase resource limits (see :manpage:`setrlimit(2)`).
+  * Override :const:`RLIMIT_NPROC` resource limit.
+  * Raise :cdata:`msg_qbytes` limit for a System V message queue above the
+    limit in :file:`/proc/sys/kernel/msgmnb` (see :manpage:`msgop(2)` and
+    :manpage:`msgctl(2)`).
+
+:attr:`sys_time`
+  Set system clock (:func:`settimeofday`, :func:`stime`, :func:`adjtimex`); set
+  real-time (hardware) clock.
+
+:attr:`sys_tty_config`
+  Use :func:`vhangup`.
+
+:data:`prctl.securebits` -- establishing a capabilities-only environment
+========================================================================
+With a kernel in which file capabilities are enabled, Linux implements a set of
+per-thread securebits flags that can be used to disable special handling of
+capabilities for UID 0 (root). The securebits flags are inherited by child
+processes. During an :func:`execve`, all of the flags are preserved, except
+:attr:`keep_caps` which is always cleared.
+
+These capabilities are available via :func:`get_securebits`, but are easier
+accessed via the :data:`~prctl.securebits` object. This object has attributes
+tell you whether specific securebits are set, or unset.
+
+The following attributes are available:
+
+:attr:`keep_caps`
+  Setting this flag allows a thread that has one or more 0 UIDs to retain its
+  capabilities when it switches all of its UIDs to a non-zero value.  If this
+  flag is not set, then such a UID switch causes the thread to lose all
+  capabilities. This flag is always cleared on an :func:`execve`.
+
+:attr:`no_setuid_fixup`
+  Setting this flag stops the kernel from adjusting capability sets when the
+  threads's effective and file system UIDs are switched between zero and
+  non-zero values. (See the subsection Effect of User ID Changes on
+  Capabilities in :manpage:`capabilities(7)`)
+
+:attr:`noroot`
+  If this bit is set, then the kernel does not grant capabilities when a
+  set-user-ID-root program is executed, or when a process with an effective or
+  real UID of 0 calls :func:`execve`. (See the subsection Capabilities and
+  execution of programs by root in :manpage:`capabilities(7)`)
+
+:attr:`keep_caps_locked`
+  Like :attr:`keep_caps`, but irreversible
+
+:attr:`no_setuid_fixup_locked`
+  Like :attr:`no_setuid_fixup`, but irreversible
+
+:attr:`noroot_locked`
+  Like :attr:`noroot`, but irreversible
+
+:mod:`_prctl` -- Basic C wrapper around prctl
+=============================================
+.. module:: _prctl
+   :platform: Linux (2.6.25 or newer)
+   :synopsis: Basic wrapper around prctl
+.. moduleauthor:: Dennis Kaarsemaker <dennis@kaarsemaker.net>
+
+This is the lower level C module that wraps the :cfunc:`prctl` syscall in a way
+that it is easy to call from a python module. It should not be used directly,
+applications and other libraries should use the functionality provided by the
+:mod:`prctl` module.
+
+This section of the documentation is meant for people who want to contribute to
+python-prctl.
+
+.. cfunction:: static PyObject\* prctl_prctl(PyObject \*self, PyObject \*args)
+
+  This is the :cfunc:`prctl` wrapper. It accepts as argument either one or two
+  :obj:`int` variables or an :obj:`int` and a :obj:`str`.
+
+  The mandatory first int must be one of the :const:`PR_SET_*`,
+  :const:`PR_GET_*`, or :const:`PR_CAPBSET_*` constants defined in
+  :file:`sys/prctl.h`. The accepted values of the second argument depend on the
+  first argument, see :manpage:`prctl(2)`.
+
+  The function validates arguments, calls :cfunc:`prctl` in the
+  argument-specific way and returns the proper value, whether :func:`prctl`
+  returns it as return value or stores it in one of the parameters.
+
+.. cfunction:: static PyObject\* prctl_set_proctitle(PyObject \*self, PyObject \*args)
+
+  Set the process title by mangling :data:`**argv`. Mandatory argument is a
+  :obj:`str`.
+
+.. cfunction:: PyMODINIT_FUNC init_prctl(void)
+
+  Create the module instance and add all the relevant constants to the module.
+  That means all :const:`PR_*`, :const:`CAP_*` and :const:`SECURE_*` constants
+  mentioned in :manpage:`prctl(2)` and :manpage:`capabilities(7)`. To avoid
+  repeating yourself all the time, use the :cmacro:`namedconstant` and
+  :cmacro:`namedattribute` macros when adding new values.
+
+.. toctree::
+   :maxdepth: 2
