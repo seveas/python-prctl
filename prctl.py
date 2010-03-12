@@ -54,10 +54,6 @@ self = sys.modules['prctl']
 for name in dir(_prctl):
     if name.startswith(('PR_GET','PR_SET','PR_CAPBSET')):
         val = getattr(_prctl, name)
-        # Add the option constants verbatim, strip PR_ prefix
-        setattr(self, name[3:], val)
-
-        # Add a non-shouting function to the module
         friendly_name = name.lower()[3:]
         setattr(self, friendly_name, prctl_wrapper(val))
 
