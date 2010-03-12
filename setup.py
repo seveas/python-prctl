@@ -1,23 +1,53 @@
 #!/usr/bin/python
 
 from distutils.core import setup, Extension
+import glob
 import os
+import subprocess
 import sys
 
+# Check our environment
+# - Need to be on linux
+# - Need kernel 2.6.26+
+# - Need python 2.5+
+# - Need kernel headers installed
+# - Need gcc
+# - Need C headers
 if sys.platform != 'linux2':
     print >>sys.stderr, "This module only works on linux"
     sys.exit(1)
+
 kvers = os.uname()[2]
 if kvers < '2.6.26':
     print >>sys.stderr, "This module requires linux 2.6.26 or newer"
     sys.exit(1)
+
 if sys.version_info[0] != 2 or sys.version_info[1] < 5:
     print >>sys.stderr, "This module requires python 2.5 or newer (but not 3.x)"
     sys.exit(1)
 
+kernel_headers = glob.glob("/usr/src/linux-headers-2.6.32-16/include/linux/securebits.h")
+if not kernel_headers:
+    print >>sys.stderr, "You need to install kernel headers to build this module"
+    sys.exit(1)
+include_dir = os.path.dirname(os.path.dirname(max(kernel_headers)))
+
+try:
+    subprocess.call(['gcc','-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+except:
+    print >>sys.stderr, "You need to install gcc to build this module"
+    sys.exit(1)
+
+sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+sp.communicate('#include <sys/prctl.h>\n')
+if sp.returncode:
+    print >>sys.stderr, "You need to install libc development headers to build this module"
+    sys.exit(1)
+
+
 _prctl = Extension("_prctl",
                    sources = ['_prctlmodule.c'],
-                   include_dirs = ['/usr/src/linux-headers-2.6.32-16/include']) #FIXME
+                   include_dirs = [include_dir])
 
 setup(name = "prctl",
       version = "1.0",
