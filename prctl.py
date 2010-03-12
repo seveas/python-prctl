@@ -1,3 +1,7 @@
+# python-pctrl -- python interface to the prctl function
+# (c)2010 Dennis Kaarsemaker <dennis@kaarsemaker.net
+# See COPYING for licensing details
+
 import _prctl # The C interface
 import sys
 
@@ -13,7 +17,7 @@ def cap_wrapper(cap):
     def setter(self, value):
         if value:
             raise ValueError("Can only drop capabilities from the bounding set, not add new ones")
-        _prctl.prctl(_prctl.PR_CAPBSET_DROP, cap) # FIXME, the really should use libcap
+        _prctl.prctl(_prctl.PR_CAPBSET_DROP, cap)
     return property(getter, setter)
 
 def sec_wrapper(bit):
@@ -49,22 +53,25 @@ class Securebits(object):
 
 securebits = Securebits()
 
-# Copy constants from _prctl and generate functions
+# Copy constants from _prctl and generate the functions
 self = sys.modules['prctl']
 for name in dir(_prctl):
     if name.startswith(('PR_GET','PR_SET','PR_CAPBSET')):
+        # Generate a function for this option
         val = getattr(_prctl, name)
         friendly_name = name.lower()[3:]
         setattr(self, friendly_name, prctl_wrapper(val))
 
     elif name.startswith('PR_'):
+        # Add the argument constants without PR_ prefix
         setattr(self, name[3:], getattr(_prctl, name))
+
     elif name.startswith(('CAP_','SECURE_')):
-        # Add CAP_*/SECURE_* constants verbatim. You shouldn't use them anyway, use the
-        # capbset/securebits object
+        # Add CAP_*/SECURE_* constants verbatim. You shouldn't use them anyway,
+        # use the capbset/securebits object
         setattr(self, name, getattr(_prctl, name))
  
-# Functions copied directly
+# Functions copied directly, not part of the prctl interface
 set_proctitle = _prctl.set_proctitle
 
 # Delete the init-only things

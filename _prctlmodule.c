@@ -10,8 +10,10 @@
 #include <sys/prctl.h>
 #include <sys/signal.h>
 
+/* This function is not in Python.h, so define it here */
 void Py_GetArgcArgv(int*, char***);
 
+/* The prctl wrapper */
 static PyObject *
 prctl_prctl(PyObject *self, PyObject *args)
 {
@@ -21,6 +23,11 @@ prctl_prctl(PyObject *self, PyObject *args)
     char name[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
     int result;
 
+    /* 
+     * Accept single int, two ints and int+string. That covers all current
+     * prctl possibilities. int+string is required for (and only accepted for)
+     * PR_SET_NAME
+     */
     if(!PyArg_ParseTuple(args, "l|l", &option, &arg)) {
         if(!PyArg_ParseTuple(args, "ls", &option, &argstr)) {
             return NULL;
@@ -38,7 +45,7 @@ prctl_prctl(PyObject *self, PyObject *args)
         }
     }
 
-    /* Validation */
+    /* Validate the optional arguments */
     switch(option) {
         case(PR_CAPBSET_READ):
         case(PR_CAPBSET_DROP):
@@ -76,7 +83,6 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_SET_NAME):
             if(strlen(argstr) > 16) {
                 /* FIXME: warn */
-
             }
             strncpy(name, argstr, 16);
             break;
@@ -120,7 +126,16 @@ prctl_prctl(PyObject *self, PyObject *args)
             }
             break;
     }
-    /* Calling prctl */
+    /*
+     * Calling prctl 
+     * There are 3 basic call modes:
+     * - Setters and getters for which the return value is the result
+     * - Getters for which the result is placed in arg2
+     * - Getters and setters that deal with strings.
+     *
+     * This function takes care of all that and always returns Py_None for
+     * settings or the result of a getter call as a PyInt or PyString.
+     */
     switch(option) {
         case(PR_CAPBSET_READ):
         case(PR_CAPBSET_DROP):
@@ -187,6 +202,8 @@ prctl_prctl(PyObject *self, PyObject *args)
     /* None is returned by default */
     Py_RETURN_NONE;
 }
+
+/* While not part of prctl, this complements PR_SET_NAME */
 static PyObject *
 prctl_set_proctitle(PyObject *self, PyObject *args)
 {
@@ -204,6 +221,7 @@ prctl_set_proctitle(PyObject *self, PyObject *args)
     memset(argv[0] + strlen(title), 0, len);
     Py_RETURN_NONE;
 }
+
 /* TODO: Add a getter? */
 
 static PyMethodDef PrctlMethods[] = {
@@ -212,6 +230,7 @@ static PyMethodDef PrctlMethods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+/* These constants avoid tediously repeating a name 2 or 4 times */
 #define namedconstant(x) PyModule_AddIntConstant(_prctl, #x, x)
 #define namedattribute(x) do{ \
     PyModule_AddIntConstant(_prctl, "PR_GET_" #x,  PR_GET_ ## x); \

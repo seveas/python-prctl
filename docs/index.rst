@@ -1,3 +1,4 @@
+========================================
 Welcome to python-prctl's documentation!
 ========================================
 
@@ -6,6 +7,21 @@ process' behaviour. Usage of the function is fairly messy though, due to
 limitations in C and linux. This module provides a nice non-messy python(ic)
 interface. Most of the text in this documentation is based on text from the
 linux manpages :manpage:`prctl(2)` and :manpage:`capabilities(7)`
+
+Downloading and installing
+==========================
+
+The source for python-prctl can be downloaded from `GitHub
+<http://github.com/seveas/python-prctl>`_ Installing is done through distutils.
+
+.. code-block:: sh
+
+  $ git clone http://github.com/seveas/python-prctl
+  $ cd python-prctl
+  $ python setup.py build
+  $ sudo python setup.py install
+
+The prctl module is now ready to use.
 
 :mod:`prctl` -- Control process attributes
 ==========================================

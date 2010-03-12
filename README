@@ -1,0 +1,12 @@
+python-prctl -- Control process attributes through prctl
+========================================================
+
+See docs/index.rst for the documentation. An HTML version can be found on
+http://kaarsemaker.net/code/python-prctl.
+
+Quick install instructions:
+
+git clone http://github.com/seveas/python-prctl
+cd python-prctl
+python setup.py build
+sudo python setup.py install
