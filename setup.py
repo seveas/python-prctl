@@ -49,7 +49,7 @@ _prctl = Extension("_prctl",
                    sources = ['_prctlmodule.c'],
                    include_dirs = [include_dir])
 
-setup(name = "prctl",
+setup(name = "python-prctl",
       version = "1.0",
       author = "Dennis Kaarsemaker",
       author_email = "dennis@kaarsemaker.net",
