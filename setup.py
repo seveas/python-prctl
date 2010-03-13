@@ -10,7 +10,6 @@ import sys
 # - Need to be on linux
 # - Need kernel 2.6.26+
 # - Need python 2.5+
-# - Need kernel headers installed
 # - Need gcc
 # - Need C headers
 if sys.platform != 'linux2':
@@ -25,12 +24,6 @@ if kvers < '2.6.26':
 if sys.version_info[0] != 2 or sys.version_info[1] < 5:
     print >>sys.stderr, "This module requires python 2.5 or newer (but not 3.x)"
     sys.exit(1)
-
-kernel_headers = glob.glob("/usr/src/linux-headers-2.6.32-16/include/linux/securebits.h")
-if not kernel_headers:
-    print >>sys.stderr, "You need to install kernel headers to build this module"
-    sys.exit(1)
-include_dir = os.path.dirname(os.path.dirname(max(kernel_headers)))
 
 try:
     subprocess.call(['gcc','-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -47,7 +40,7 @@ if sp.returncode:
 
 _prctl = Extension("_prctl",
                    sources = ['_prctlmodule.c'],
-                   include_dirs = [include_dir])
+                   depends = ['securebits.h'])
 
 setup(name = "python-prctl",
       version = "1.0",

@@ -5,8 +5,8 @@
  */
 
 #include <Python.h>
-#include <linux/capability.h>
-#include <linux/securebits.h>
+#include "securebits.h"
+#include <sys/capability.h>
 #include <sys/prctl.h>
 #include <sys/signal.h>
 
