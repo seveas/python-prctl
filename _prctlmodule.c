@@ -395,7 +395,7 @@ static PyMethodDef PrctlMethods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
-/* These constants avoid tediously repeating a name 2 or 4 times */
+/* These macros avoid tediously repeating a name 2 or 4 times */
 #define namedconstant(x) PyModule_AddIntConstant(_prctl, #x, x)
 #define namedattribute(x) do{ \
     PyModule_AddIntConstant(_prctl, "PR_GET_" #x,  PR_GET_ ## x); \
