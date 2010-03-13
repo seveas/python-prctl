@@ -12,6 +12,7 @@ import sys
 # - Need python 2.5+
 # - Need gcc
 # - Need C headers
+# - Need libcap headers
 if sys.platform != 'linux2':
     print >>sys.stderr, "This module only works on linux"
     sys.exit(1)
@@ -37,10 +38,16 @@ if sp.returncode:
     print >>sys.stderr, "You need to install libc development headers to build this module"
     sys.exit(1)
 
+sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+sp.communicate('#include <sys/capability.h>\n')
+if sp.returncode:
+    print >>sys.stderr, "You need to install libcap development headers to build this module"
+    sys.exit(1)
 
 _prctl = Extension("_prctl",
                    sources = ['_prctlmodule.c'],
-                   depends = ['securebits.h'])
+                   depends = ['securebits.h'],
+                   libraries = ['cap'])
 
 setup(name = "python-prctl",
       version = "1.0",

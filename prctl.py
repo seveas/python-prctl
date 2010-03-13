@@ -11,13 +11,20 @@ def prctl_wrapper(option):
         return _prctl.prctl(option, arg)
     return call_prctl
 
-def cap_wrapper(cap):
+def capb_wrapper(cap):
     def getter(self):
         return _prctl.prctl(_prctl.PR_CAPBSET_READ, cap)
     def setter(self, value):
         if value:
             raise ValueError("Can only drop capabilities from the bounding set, not add new ones")
         _prctl.prctl(_prctl.PR_CAPBSET_DROP, cap)
+    return property(getter, setter)
+
+def cap_wrapper(cap):
+    def getter(self):
+        return get_caps((cap, self.flag))[self.flag][cap]
+    def setter(self, val):
+        set_caps((cap, self.flag, val))
     return property(getter, setter)
 
 def sec_wrapper(bit):
@@ -33,15 +40,34 @@ def sec_wrapper(bit):
     return property(getter, setter)
 
 # Wrap the capability bounding set and securebits in an object
+_ALL_FLAG_NAMES  = ('CAP_EFFECTIVE', 'CAP_INHERITABLE', 'CAP_PERMITTED')
+_ALL_CAP_NAMES = [x for x in dir(_prctl) if x.startswith('CAP_') and x not in _ALL_FLAG_NAMES]
+ALL_CAPS = tuple([getattr(_prctl,x) for x in _ALL_CAP_NAMES])
+ALL_FLAGS = tuple([getattr(_prctl,x) for x in _ALL_FLAG_NAMES])
 class Capbset(object):
-    __slots__ = [name[4:].lower() for name in dir(_prctl) if name.startswith('CAP_')]
+    __slots__ = _ALL_CAP_NAMES
     def __init__(self):
-        for name in dir(_prctl):
-            if name.startswith('CAP_'):
-                friendly_name = name[4:].lower()
-                setattr(self.__class__, friendly_name, cap_wrapper(getattr(_prctl, name)))
+        for name in _ALL_CAP_NAMES:
+            friendly_name = name[4:].lower()
+            setattr(self.__class__, friendly_name, capb_wrapper(getattr(_prctl, name)))
+
+    #def drop(self, *args):
+    #    for arg in args:
+    #        ....
 
 capbset = Capbset()
+
+class Capset(object):
+    __slots__ = [name[4:].lower() for name in dir(_prctl) if name.startswith('CAP_')] + ['flag']
+    def __init__(self, flag):
+        self.flag = flag
+        for name in _ALL_CAP_NAMES:
+            friendly_name = name[4:].lower()
+            setattr(self.__class__, friendly_name, cap_wrapper(getattr(_prctl, name)))
+
+cap_effective = Capset(_prctl.CAP_EFFECTIVE)
+cap_inheritable = Capset(_prctl.CAP_INHERITABLE)
+cap_permitted = Capset(_prctl.CAP_PERMITTED)
 
 class Securebits(object):
     __slots__ = [name[7:].lower() for name in dir(_prctl) if name.startswith('SECURE_')]
@@ -70,10 +96,58 @@ for name in dir(_prctl):
         # Add CAP_*/SECURE_* constants verbatim. You shouldn't use them anyway,
         # use the capbset/securebits object
         setattr(self, name, getattr(_prctl, name))
- 
+
+def _parse_caps(has_value, *args):
+    if has_value:
+        new_args = {(_prctl.CAP_PERMITTED,True): [],
+                    (_prctl.CAP_INHERITABLE,True): [],
+                    (_prctl.CAP_EFFECTIVE,True): [],
+                    (_prctl.CAP_PERMITTED,False): [],
+                    (_prctl.CAP_INHERITABLE,False): [],
+                    (_prctl.CAP_EFFECTIVE,False): []}
+    else:
+        new_args = {_prctl.CAP_PERMITTED: [],
+                    _prctl.CAP_INHERITABLE: [],
+                    _prctl.CAP_EFFECTIVE: []}
+    for arg in args:
+        if has_value:
+            caps, flags, value = arg
+        else:
+            caps, flags = arg
+        # Accepted format: (cap|[cap,...], flag|[flag,...])
+        if not (hasattr(caps, '__iter__') or hasattr(caps, '__getitem__')):
+            caps = [caps]
+        if not (hasattr(flags, '__iter__') or hasattr(flags, '__getitem__')):
+            flags = [flags]
+        for cap in caps:
+            for flag in flags:
+                if has_value:
+                    new_args[(flag,value)].append(cap)
+                else:
+                    new_args[flag].append(cap)
+    if has_value:
+        et = list(set(new_args[(_prctl.CAP_EFFECTIVE,True)]))
+        pt = list(set(new_args[(_prctl.CAP_PERMITTED,True)]))
+        it = list(set(new_args[(_prctl.CAP_INHERITABLE,True)]))
+        ef = list(set(new_args[(_prctl.CAP_EFFECTIVE,False)]))
+        pf = list(set(new_args[(_prctl.CAP_PERMITTED,False)]))
+        if_ = list(set(new_args[(_prctl.CAP_INHERITABLE,False)]))
+        return (et, pt, it, ef, pf, if_)
+    else:
+        e = list(set(new_args[_prctl.CAP_EFFECTIVE]))
+        p = list(set(new_args[_prctl.CAP_PERMITTED]))
+        i = list(set(new_args[_prctl.CAP_INHERITABLE]))
+        return (e, p, i)
+
+def get_caps(*args):
+    return _prctl.get_caps(*_parse_caps(False, *args))
+
+def set_caps(*args):
+    return _prctl.set_caps(*_parse_caps(True, *args))
+
 # Functions copied directly, not part of the prctl interface
 set_proctitle = _prctl.set_proctitle
 
 # Delete the init-only things
-del self, friendly_name, name, prctl_wrapper, cap_wrapper, sec_wrapper
-del Capbset, Securebits, sys, val
+del self, friendly_name, name, prctl_wrapper, cap_wrapper, capb_wrapper, sec_wrapper
+del Capbset, Capset, Securebits, sys, val

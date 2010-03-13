@@ -44,26 +44,27 @@ class PrctlTest(unittest.TestCase):
 
     def test_capbset(self):
         """Test the get_capbset/set_capbset functions"""
-        self.assertEquals(prctl.capbset_read(prctl.CAP_NET_ADMIN), True)
+        self.assertEquals(prctl.capbset_read(prctl.CAP_FOWNER), True)
         if self.am_root:
-            self.assertEqual(prctl.capbset_drop(prctl.CAP_NET_ADMIN), None)
-            self.assertEqual(prctl.capbset_read(prctl.CAP_NET_ADMIN), False)
+            self.assertEqual(prctl.capbset_drop(prctl.CAP_FOWNER), None)
+            self.assertEqual(prctl.capbset_read(prctl.CAP_FOWNER), False)
         else:
-            self.assertRaises(OSError, prctl.capbset_drop, prctl.CAP_SYS_ADMIN)
+            self.assertRaises(OSError, prctl.capbset_drop, prctl.CAP_MKNOD)
         self.assertRaises(ValueError, prctl.capbset_read, 999)
 
     def test_capbset_object(self):
         """Test manipulation of the capability bounding set via the capbset object"""
         self.assertEqual(prctl.capbset.sys_admin, True)
         if self.am_root:
-            prctl.capbset.sys_admin = False
-            self.assertEqual(prctl.capbset.sys_admin, False)
+            prctl.capbset.kill = False
+            self.assertEqual(prctl.capbset.kill, False)
+            self.assertEqual(prctl.capbset.sys_admin, True)
         else:
             def set_false():
-                prctl.capbset.sys_admin = False
+                prctl.capbset.kill = False
             self.assertRaises(OSError, set_false)
         def set_true():
-            prctl.capbset.sys_admin = True
+            prctl.capbset.kill = True
         self.assertRaises(ValueError, set_true)
         def unknown_attr():
             prctl.capbset.foo = 1
@@ -179,6 +180,7 @@ class PrctlTest(unittest.TestCase):
         if os.geteuid() == 0:
             prctl.securebits.noroot = True
             self.assertEqual(prctl.securebits.noroot, True)
+            self.assertEqual(prctl.securebits.no_setuid_fixup, False)
             prctl.securebits.noroot_locked = True
             def set_false():
                 prctl.securebits.noroot = False
@@ -218,6 +220,63 @@ class PrctlTest(unittest.TestCase):
         else:
             self.assertRaises(OSError, prctl.get_unalign)
             self.assertRaises(OSError, prctl.set_unalign, prctl.UNALIGN_NOPRINT)
+
+    def test_getcaps(self):
+        """Test the get_caps function"""
+        self.assertEquals(prctl.get_caps(), {prctl.CAP_EFFECTIVE: {}, prctl.CAP_INHERITABLE: {}, prctl.CAP_PERMITTED: {}})
+        self.assertEquals(prctl.get_caps((prctl.CAP_SYS_ADMIN, prctl.ALL_FLAGS),(prctl.CAP_NET_ADMIN, prctl.CAP_EFFECTIVE)),
+                          {prctl.CAP_EFFECTIVE: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root},
+                           prctl.CAP_INHERITABLE: {prctl.CAP_SYS_ADMIN: False},
+                           prctl.CAP_PERMITTED: {prctl.CAP_SYS_ADMIN: self.am_root}})
+        self.assertEquals(prctl.get_caps(([prctl.CAP_SYS_ADMIN,prctl.CAP_NET_ADMIN], [prctl.CAP_EFFECTIVE,prctl.CAP_PERMITTED])),
+                          {prctl.CAP_EFFECTIVE: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root},
+                           prctl.CAP_INHERITABLE: {},
+                           prctl.CAP_PERMITTED: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root}})
+        self.assertRaises(TypeError, prctl.get_caps, ('abc',prctl.ALL_FLAGS))
+        self.assertRaises(KeyError, prctl.get_caps, (prctl.CAP_SYS_ADMIN,'abc'))
+        def fail():
+            prctl.get_caps((1234,prctl.ALL_FLAGS))
+        self.assertRaises(OSError, fail)
+
+    def test_setcaps(self):
+        """Test the setcaps function"""
+        if self.am_root:
+            prctl.set_caps((prctl.CAP_SETUID, prctl.ALL_FLAGS, True))
+        else:
+            self.assertRaises(OSError, prctl.set_caps, (prctl.CAP_SETUID, prctl.ALL_FLAGS, True))
+        self.assertEqual(prctl.get_caps((prctl.CAP_SETUID, prctl.ALL_FLAGS)),
+                         {prctl.CAP_EFFECTIVE: {prctl.CAP_SETUID: self.am_root},
+                          prctl.CAP_PERMITTED: {prctl.CAP_SETUID: self.am_root},
+                          prctl.CAP_INHERITABLE: {prctl.CAP_SETUID: self.am_root}})
+        prctl.set_caps((prctl.CAP_SETUID, prctl.ALL_FLAGS, False))
+        self.assertEqual(prctl.get_caps((prctl.CAP_SETUID, prctl.ALL_FLAGS)),
+                         {prctl.CAP_EFFECTIVE: {prctl.CAP_SETUID: False},
+                          prctl.CAP_PERMITTED: {prctl.CAP_SETUID: False},
+                          prctl.CAP_INHERITABLE: {prctl.CAP_SETUID: False}})
+        self.assertRaises(OSError, prctl.set_caps, (prctl.CAP_SETUID, prctl.ALL_FLAGS, True))
+
+    capabilities = [x[4:].lower() for x in dir(_prctl) if x.startswith('CAP_')]
+    def test_capabilities_objects(self):
+        for cap in self.capabilities:
+            if cap in ('all','effective','permitted','inheritable','setuid'):
+                continue
+            self.assertEquals(getattr(prctl.cap_effective, cap), self.am_root)
+            self.assertEquals(getattr(prctl.cap_permitted, cap), self.am_root)
+            self.assertEquals(getattr(prctl.cap_inheritable, cap), False)
+        for cap in ['dac_override','mac_override','net_raw']:
+            if self.am_root:
+                setattr(prctl.cap_effective, cap, False)
+                setattr(prctl.cap_permitted, cap, False)
+                setattr(prctl.cap_inheritable, cap, False)
+            self.assertRaises(OSError, setattr, prctl.cap_effective, cap, True)
+            self.assertRaises(OSError, setattr, prctl.cap_permitted, cap, True)
+            if self.am_root:
+                setattr(prctl.cap_inheritable, cap, True)
+            else:
+                self.assertRaises(OSError, setattr, prctl.cap_inheritable, cap, True)
+
+    def test_captoname(self):
+        self.assertEqual(_prctl.cap_to_name(prctl.CAP_SYS_ADMIN), 'sys_admin')
 
 if __name__ == '__main__':
     unittest.main()

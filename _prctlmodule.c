@@ -224,7 +224,172 @@ prctl_set_proctitle(PyObject *self, PyObject *args)
 
 /* TODO: Add a getter? */
 
+static PyObject * prctl_get_caps_flag(PyObject *list, cap_t caps, int flag) {
+    int i;
+    PyObject *ret, *item, *val;
+    cap_flag_value_t value;
+
+    if(list && !PySequence_Check(list)) {
+        PyErr_SetString(PyExc_TypeError, "A sequence of integers is required");
+        return NULL;
+    }
+    ret = PyDict_New();
+    if(!list)
+        return ret;
+    for(i=0; i < PyList_Size(list); i++) {
+        item = PyList_GetItem(list, i);
+        if(!PyInt_Check(item)) {
+            PyErr_SetString(PyExc_TypeError, "A sequence of integers is required");
+            return ret; /* Return the list so it can be freed */
+        }
+        if(cap_get_flag(caps, PyInt_AsLong(item), flag, &value) == -1) {
+            PyErr_SetFromErrno(PyExc_OSError);
+            return ret;
+        }
+        val = PyBool_FromLong(value);
+        PyDict_SetItem(ret, item, val);
+        Py_XDECREF(val);
+    }
+    return ret;
+}
+
+static int prctl_set_caps_flag(PyObject *list, cap_t caps, int flag, cap_flag_value_t value) {
+    int i;
+    cap_value_t cap;
+    PyObject *item;
+
+    if(list && !PySequence_Check(list)) {
+        PyErr_SetString(PyExc_TypeError, "A sequence of integers is required");
+        return 0;
+    }
+    if(!list)
+        return 1;
+
+    for(i=0; i < PyList_Size(list); i++) {
+        item = PyList_GetItem(list, i);
+        if(!PyInt_Check(item)) {
+            PyErr_SetString(PyExc_TypeError, "A sequence of integers is required");
+            return 0;
+        }
+        cap = PyInt_AsLong(item);
+        if(cap_set_flag(caps, flag, 1, &cap, value) == -1) {
+            PyErr_SetFromErrno(PyExc_OSError);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static PyObject * prctl_get_caps(PyObject *self, PyObject *args)
+{
+    PyObject *effective = NULL;
+    PyObject *permitted = NULL;
+    PyObject *inheritable = NULL;
+    PyObject *effective_ = NULL;
+    PyObject *permitted_ = NULL;
+    PyObject *inheritable_ = NULL;
+    PyObject *ret = NULL;
+    PyObject *key = NULL;
+    cap_t caps = NULL;
+
+    if(!PyArg_ParseTuple(args, "O|OO", &effective, &permitted, &inheritable)) {
+        return NULL;
+    }
+    caps = cap_get_proc();
+    if(!caps) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        return NULL;
+    }
+    effective_ = prctl_get_caps_flag(effective, caps, CAP_EFFECTIVE);
+    if(PyErr_Occurred()) goto error;
+    permitted_ = prctl_get_caps_flag(permitted, caps, CAP_PERMITTED);
+    if(PyErr_Occurred()) goto error;
+    inheritable_ = prctl_get_caps_flag(inheritable, caps, CAP_INHERITABLE);
+    if(PyErr_Occurred()) goto error;
+
+    /* Now build the dict */
+    ret = PyDict_New();
+    key = PyInt_FromLong(CAP_EFFECTIVE);
+    PyDict_SetItem(ret, key, effective_);
+    Py_XDECREF(key);
+    key = PyInt_FromLong(CAP_PERMITTED);
+    PyDict_SetItem(ret, key, permitted_);
+    Py_XDECREF(key);
+    key = PyInt_FromLong(CAP_INHERITABLE);
+    PyDict_SetItem(ret, key, inheritable_);
+    Py_XDECREF(key);
+
+error:
+    cap_free(caps);
+    Py_XDECREF(effective_);
+    Py_XDECREF(permitted_);
+    Py_XDECREF(inheritable_);
+
+    return ret;
+}
+
+static PyObject * prctl_set_caps(PyObject *self, PyObject *args)
+{
+    PyObject *effective_set = NULL;
+    PyObject *permitted_set = NULL;
+    PyObject *inheritable_set = NULL;
+    PyObject *effective_clear = NULL;
+    PyObject *permitted_clear = NULL;
+    PyObject *inheritable_clear = NULL;
+    cap_t caps = NULL;
+
+    if(!PyArg_ParseTuple(args, "O|OOOOO", &effective_set, &permitted_set, &inheritable_set,
+                                          &effective_clear, &permitted_clear, &inheritable_clear)) {
+        return NULL;
+    }
+    caps = cap_get_proc();
+    if(!caps) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        return NULL;
+    }
+    if(!prctl_set_caps_flag(effective_set, caps, CAP_EFFECTIVE, CAP_SET))
+        return NULL;
+    if(!prctl_set_caps_flag(permitted_set, caps, CAP_PERMITTED, CAP_SET))
+        return NULL;
+    if(!prctl_set_caps_flag(inheritable_set, caps, CAP_INHERITABLE, CAP_SET))
+        return NULL;
+    if(!prctl_set_caps_flag(effective_clear, caps, CAP_EFFECTIVE, CAP_CLEAR))
+        return NULL;
+    if(!prctl_set_caps_flag(permitted_clear, caps, CAP_PERMITTED, CAP_CLEAR))
+        return NULL;
+    if(!prctl_set_caps_flag(inheritable_clear, caps, CAP_INHERITABLE, CAP_CLEAR))
+        return NULL;
+
+    if(cap_set_proc(caps) == -1) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        return NULL;
+    }
+    
+    Py_RETURN_NONE;
+}
+
+static PyObject * prctl_cap_to_name(PyObject *self, PyObject *args) {
+    cap_value_t cap;
+    char *name;
+    PyObject *ret;
+
+    if(!PyArg_ParseTuple(args, "i", &cap)){
+        return NULL;
+    }
+    name = cap_to_name(cap);
+    if(!name) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        return NULL;
+    }
+    ret = PyString_FromString(name+4); /* Exclude the cap_ prefix */
+    cap_free(name);
+    return ret;
+}
+
 static PyMethodDef PrctlMethods[] = {
+    {"get_caps", prctl_get_caps, METH_VARARGS, "Get process capabilities"},
+    {"set_caps", prctl_set_caps, METH_VARARGS, "Set process capabilities"},
+    {"cap_to_name", prctl_cap_to_name, METH_VARARGS, "Convert capability number to name"},
     {"prctl", prctl_prctl, METH_VARARGS, "Call prctl"},
     {"set_proctitle", prctl_set_proctitle, METH_VARARGS, "Set the process title"},
     {NULL, NULL, 0, NULL} /* Sentinel */
@@ -278,6 +443,9 @@ init_prctl(void)
     namedconstant(PR_UNALIGN_NOPRINT);
     namedconstant(PR_UNALIGN_SIGBUS);
     /* Add the CAP_* constants too */
+    namedconstant(CAP_EFFECTIVE);
+    namedconstant(CAP_PERMITTED);
+    namedconstant(CAP_INHERITABLE);
     namedconstant(CAP_CHOWN);
     namedconstant(CAP_DAC_OVERRIDE);
     namedconstant(CAP_DAC_READ_SEARCH);
