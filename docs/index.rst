@@ -8,11 +8,38 @@ limitations in C and linux. This module provides a nice non-messy python(ic)
 interface. Most of the text in this documentation is based on text from the
 linux manpages :manpage:`prctl(2)` and :manpage:`capabilities(7)`
 
+Besides prctl, this library also wraps libcap for complete capability handling
+and allows you to set the process name as seen in ps and top.
+
 Downloading and installing
 ==========================
 
-The source for python-prctl can be downloaded from `GitHub
-<http://github.com/seveas/python-prctl>`_ Installing is done through distutils.
+Before you try to install python-prctl, you will need to install the following:
+
+* gcc
+* libc development headers
+* libcap development headers
+
+On Debian and Ubuntu, this is done as follows:
+
+.. code-block:: sh
+
+  $ sudo apt-get install build-essential libcap-dev
+
+On Fedora and other RPM-based distributions:
+
+.. code-block:: sh
+
+  $ sudo yum install gcc glibc-devel libcap-devel
+
+The latest stable version can be installed with distutils:
+
+.. code-block:: sh
+
+  $ sudo easy_install python-prctl
+
+The latest development source for python-prctl can be downloaded from `GitHub
+<http://github.com/seveas/python-prctl>`_. Installing is again done with distutils.
 
 .. code-block:: sh
 
@@ -220,7 +247,7 @@ The prctl module is now ready to use.
   .. note:: 
 
     It is not recommended to use this function directly, use the
-    :data:`~prctl.securebits` object instead.
+    :attr:`~prctl.securebits` object instead.
 
 .. function:: get_securebits()
   
@@ -229,7 +256,7 @@ The prctl module is now ready to use.
   .. note:: 
 
     As with :func:`set_securebits`, it is not recommended to use this function
-    directly, use the :data:`~prctl.securebits` object instead.
+    directly, use the :attr:`~prctl.securebits` object instead.
 
 .. function:: capbset_read(capability)
 
@@ -242,7 +269,7 @@ The prctl module is now ready to use.
   .. note:: 
 
     It is not recommended to use this function directly, use the
-    :data:`~prctl.capbset` object instead.
+    :attr:`~prctl.capbset` object instead.
 
 .. function:: capbset_drop(capability)
 
@@ -258,45 +285,91 @@ The prctl module is now ready to use.
   .. note:: 
 
     As with :func:`capbset_read`, it is not recommended to use this function
-    directly, use the :data:`~prctl.capbset` object instead.
+    directly, use the :attr:`~prctl.capbset` object instead.
 
-:data:`prctl.capbset` -- The capability bounding set
-====================================================
+Capabilities and the capability bounding set
+============================================
 
-The :data:`~prctl.capbset` object represents the current capability bounting
+For the purpose of performing permission checks, traditional Unix
+implementations distinguish two categories of processes: privileged processes
+(whose effective user ID is 0, referred to as superuser or root), and
+unprivileged processes (whose effective UID is non-zero). Privileged processes
+bypass all kernel permission checks, while unpriv‐ ileged processes are subject
+to full permission checking based on the process's credentials (usually:
+effective UID, effective GID, and sup‐ plementary group list).
+
+Starting with kernel 2.2, Linux divides the privileges traditionally associated
+with superuser into distinct units, known as capabilities, which can be
+independently enabled and disabled. Capabilities are a per-thread attribute.
+
+Each thread has three capability sets containing zero or  more  of  the
+capabilities described below
+
+Permitted (the :attr:`~prctl.cap_permitted` object):
+  This is a limiting superset for the effective capabilities that the thread
+  may assume. It is also a limiting superset for the capabilities that may be
+  added to the inheritable set by a thread that does not have the
+  :attr:`setpcap` capability in its effective set.
+
+  If a thread drops a capability from its permitted set, it can never
+  re-acquire that capability (unless it :func:`execve` s either a
+  set-user-ID-root program, or a program whose associated file capabilities
+  grant that capability).
+
+Inheritable (the :attr:`~prctl.cap_inheritable` object):
+  This is a set of capabilities preserved across an :func:`execve`. It provides
+  a mechanism for a process to assign capabilities to the permitted set of the
+  new program during an :func:`execve`.
+
+Effective (the :attr:`~prctl.cap_effective` object):
+  This is the set of capabilities used by the kernel to perform permission
+  checks for the thread.
+
+  A child created via :func:`fork` inherits copies of its parent's capability
+  sets. See the :manpage:`capabilities(7)` manpage for a discussion of the
+  treatment of capabilities during :func:`execve`.
+
+The :attr:`~prctl.capbset` object represents the current capability bounding
 set of the process. The capability bounding set dictates whether the process
 can receive the capability through a file's permitted capability set on a
-subsequent call to :func:`execve`.
+subsequent call to :func:`execve`. All attributes of :attr:`~prctl.capbset` are
+:const:`True` by default, unless a parent process already removed them from the
+bounding set.
 
-The :data:`~prctl.capbset` object has a number of attributes, all of which are
-properties. They can only be set to :const:`False`, this drops them from the
-capability bounding set. All attributes are :const:`True` by default, unless a
-parent process already removed them from the bounding set.
+These four objects have a number of attributes, all of which are properties.
+For the capability bounding set and the effective capabilities, these can only
+be set to :const:`False`, this drops them from the corresponding set.
 
 All details about capabilities and capability bounding sets can be found in the
 :manpage:`capabilities(7)` manpage, on which most text below is based.
 
-These are the attributes:
+These are the attributes (:class:`set` refers to each of the above objects):
 
-:attr:`audit_control`
+.. attribute:: set.audit_control
+
   Enable and disable kernel auditing; change auditing filter rules; retrieve
   auditing status and filtering rules.
 
-:attr:`audit_write`
+.. attribute:: set.audit_write
+
   Write records to kernel auditing log.
 
-:attr:`chown`
+.. attribute:: set.chown
+
   Make arbitrary changes to file UIDs and GIDs (see :manpage:`chown(2)`).
 
-:attr:`dac_override`
+.. attribute:: set.dac_override
+
   Bypass file read, write, and execute permission checks.  (DAC is an
   abbreviation of "discretionary access control".)
 
-:attr:`dac_read_search`
+.. attribute:: set.dac_read_search
+
   Bypass file read permission checks and directory read and execute permission
   checks.
 
-:attr:`fowner`
+.. attribute:: set.fowner
+
   * Bypass  permission  checks  on  operations  that  normally require the file
     system UID of the process to match the UID of the file (e.g.,
     :func:`chmod`, :func:`utime`), excluding those operations covered by
@@ -307,63 +380,79 @@ These are the attributes:
   * Specify :const:`O_NOATIME` for arbitrary files in :func:`open` and
     :func:`fcntl`.
 
-:attr:`fsetid`
+.. attribute:: set.fsetid
+
   Don't clear set-user-ID and set-group-ID permission bits when a file is
   modified; set the set-group-ID bit for a file whose  GID  does  not match the
   file system or any of the supplementary GIDs of the calling process.
 
-:attr:`ipc_lock`
+.. attribute:: set.ipc_lock
+
   Lock memory (:func:`mlock`, :func:`mlockall`, :func:`mmap`, :func:`shmctl`).
 
-:attr:`ipc_owner`
+.. attribute:: set.ipc_owner
+
   Bypass permission checks for operations on System V IPC objects.
 
-:attr:`kill`
+.. attribute:: set.kill
+
   Bypass permission checks for sending signals (see :manpage:`kill(2)`). This
   includes use of the :func:`ioctl` :const:`KDSIGACCEPT` operation.
 
-:attr:`lease`
+.. attribute:: set.lease
+
   Establish leases on arbitrary files (see :manpage:`fcntl(2)`).
 
-:attr:`linux_immutable`
+.. attribute:: set.linux_immutable
+
   Set the :const:`FS_APPEND_FL` and :const:`FS_IMMUTABLE_FL` i-node flags (see
   :manpage:`chattr(1)`).
 
-:attr:`mac_admin`
+.. attribute:: set.mac_admin
+
   Override Mandatory Access Control (MAC). Implemented for the Smack Linux
   Security Module (LSM).
 
-:attr:`mac_override`
+.. attribute:: set.mac_override
+
   Allow MAC configuration or state changes. Implemented for the Smack LSM.
 
 .. The above two were copied from the manpage, but they seem to be swapped. Hmm...
 
-:attr:`mknod`
+.. attribute:: set.mknod
+
   Create special files using :func:`mknod`.
 
-:attr:`net_admin`
+.. attribute:: set.net_admin
+
   Perform various network-related operations (e.g., setting privileged socket
   options, enabling multicasting, interface configuration, modifying routing
   tables).
 
-:attr:`net_bind_service`
+.. attribute:: set.net_bind_service
+
   Bind a socket to Internet domain privileged ports (port numbers less than
   1024).
 
-:attr:`net_broadcast`
+.. attribute:: set.net_broadcast
+
   (Unused) Make socket broadcasts, and listen to multicasts.
 
-:attr:`net_raw`
+.. attribute:: set.net_raw
+
   Use :const:`RAW` and :const:`PACKET` sockets.
 
-:attr:`setgid`
+.. attribute:: set.setgid
+
   Make arbitrary manipulations of process GIDs and supplementary GID list;
   forge GID when passing socket credentials via Unix domain sockets.
 
-:attr:`setfcap`
+.. attribute:: set.setfcap
+
   Set file capabilities.
 
-:attr:`setpcap`
+.. attribute:: set.setpcap
+
   If file capabilities are not supported: grant or remove any capability in the
   caller's permitted capability set to or from any other process. (This
   property of :attr:`setpcap` is not available when the kernel is configured to
@@ -375,12 +464,14 @@ These are the attributes:
   bounding set (via :func:`~prctl.capbset_drop`); make changes to the
   securebits flags.
 
-:attr:`setuid`
+.. attribute:: set.setuid
+
   Make arbitrary manipulations of process UIDs (:func:`setuid`,
   :func:`setreuid`, :func:`setresuid`, :func:`setfsuid`); make forged UID when
   passing socket credentials via Unix domain sockets.
 
-:attr:`sys_admin`
+.. attribute:: set.sys_admin
+
   * Perform a range of system administration operations including:
     :func:`quotactl`, func:`mount`, :func:`umount`, :func:`swapon`,
     :func:`swapoff`, :func:`sethostname`, and :func:`setdomainname`.
@@ -399,17 +490,21 @@ These are the attributes:
   * Perform :const:`KEYCTL_CHOWN` and :const:`KEYCTL_SETPERM` :func:`keyctl`
     operations.
 
-:attr:`sys_boot`
+.. attribute:: set.sys_boot
+
   Use :func:`reboot` and :func:`kexec_load`.
 
-:attr:`sys_chroot`
+.. attribute:: set.sys_chroot
+
   Use :func:`chroot`.
 
-:attr:`sys_module`
+.. attribute:: set.sys_module
+
   Load and unload kernel modules (see :manpage:`init_module(2)` and
   :manpage:`delete_module(2)`).
 
-:attr:`sys_nice`
+.. attribute:: set.sys_nice
+
   * Raise process nice value (:func:`nice`, :func:`setpriority`) and change the
     nice value for arbitrary processes.
   * Set real-time scheduling policies for calling process, and set scheduling
@@ -424,17 +519,21 @@ These are the attributes:
   * Use the :const:`MPOL_MF_MOVE_ALL` flag with :func:`mbind` and
     :func:`move_pages`.
 
-:attr:`sys_pacct`
+.. attribute:: set.sys_pacct
+
   Use :func:`acct`.
 
-:attr:`sys_ptrace`
+.. attribute:: set.sys_ptrace
+
   Trace arbitrary processes using :func:`ptrace`.
 
-:attr:`sys_rawio`
+.. attribute:: set.sys_rawio
+
   Perform I/O port operations (:func:`iopl` and :func:`ioperm`); access
   :file:`/proc/kcore`.
 
-:attr:`sys_resource`
+.. attribute:: set.sys_resource
+
   * Use reserved space on ext2 file systems.
   * Make :func:`ioctl` calls controlling ext3 journaling.
   * Override disk quota limits.
@@ -444,15 +543,32 @@ These are the attributes:
     limit in :file:`/proc/sys/kernel/msgmnb` (see :manpage:`msgop(2)` and
     :manpage:`msgctl(2)`).
 
-:attr:`sys_time`
+.. attribute:: set.sys_time
+
   Set system clock (:func:`settimeofday`, :func:`stime`, :func:`adjtimex`); set
   real-time (hardware) clock.
 
-:attr:`sys_tty_config`
+.. attribute:: set.sys_tty_config
+
   Use :func:`vhangup`.
 
-:data:`prctl.securebits` -- establishing a capabilities-only environment
-========================================================================
+The four capabilities objects also have two additional methods, to make
+dropping many capabilities at the same time easier:
+
+.. function:: set.drop(cap [, ...])
+
+  Drop all capabilities given as arguments from the set.
+
+.. function:: set.limit(cap [, ...])
+
+  Drop all but the given capabilities from the set.
+
+These function accept both names of capabilities as given above and the
+:data:`CAP_` constants as defined in :file:`capabilities.h`. These constants
+are available as :attr:`prctl.CAP_SYS_ADMIN` et cetera.
+
+Establishing a capabilities-only environment with securebits
+============================================================
 With a kernel in which file capabilities are enabled, Linux implements a set of
 per-thread securebits flags that can be used to disable special handling of
 capabilities for UID 0 (root). The securebits flags are inherited by child
@@ -460,36 +576,42 @@ processes. During an :func:`execve`, all of the flags are preserved, except
 :attr:`keep_caps` which is always cleared.
 
 These capabilities are available via :func:`get_securebits`, but are easier
-accessed via the :data:`~prctl.securebits` object. This object has attributes
+accessed via the :attr:`~prctl.securebits` object. This object has attributes
 tell you whether specific securebits are set, or unset.
 
 The following attributes are available:
 
-:attr:`keep_caps`
+.. attribute:: securebits.keep_caps
+
   Setting this flag allows a thread that has one or more 0 UIDs to retain its
   capabilities when it switches all of its UIDs to a non-zero value.  If this
   flag is not set, then such a UID switch causes the thread to lose all
   capabilities. This flag is always cleared on an :func:`execve`.
 
-:attr:`no_setuid_fixup`
+.. attribute:: securebits.no_setuid_fixup
+
   Setting this flag stops the kernel from adjusting capability sets when the
   threads's effective and file system UIDs are switched between zero and
   non-zero values. (See the subsection Effect of User ID Changes on
   Capabilities in :manpage:`capabilities(7)`)
 
-:attr:`noroot`
+.. attribute:: securebits.noroot
+
   If this bit is set, then the kernel does not grant capabilities when a
   set-user-ID-root program is executed, or when a process with an effective or
   real UID of 0 calls :func:`execve`. (See the subsection Capabilities and
   execution of programs by root in :manpage:`capabilities(7)`)
 
-:attr:`keep_caps_locked`
+.. attribute:: securebits.keep_caps_locked
+
   Like :attr:`keep_caps`, but irreversible
 
-:attr:`no_setuid_fixup_locked`
+.. attribute:: securebits.no_setuid_fixup_locked
+
   Like :attr:`no_setuid_fixup`, but irreversible
 
-:attr:`noroot_locked`
+.. attribute:: securebits.noroot_locked
+
   Like :attr:`noroot`, but irreversible
 
 :mod:`_prctl` -- Basic C wrapper around prctl
