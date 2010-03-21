@@ -2,3 +2,11 @@
 
 %:
 	dh $@
+
+clean:
+	dh clean
+	make -C docs clean
+
+build:
+	dh build
+	make -C docs html
