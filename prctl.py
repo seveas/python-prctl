@@ -39,31 +39,44 @@ def sec_wrapper(bit):
         _prctl.prctl(_prctl.PR_SET_SECUREBITS, bits)
     return property(getter, setter)
 
-# Wrap the capability bounding set and securebits in an object
+# Wrap the capabilities, capability bounding set and securebits in an object
 _ALL_FLAG_NAMES  = ('CAP_EFFECTIVE', 'CAP_INHERITABLE', 'CAP_PERMITTED')
 _ALL_CAP_NAMES = [x for x in dir(_prctl) if x.startswith('CAP_') and x not in _ALL_FLAG_NAMES]
+ALL_FLAG_NAMES  = [x[4:].lower() for x in _ALL_FLAG_NAMES]
+ALL_CAP_NAMES  = [x[4:].lower() for x in _ALL_CAP_NAMES]
 ALL_CAPS = tuple([getattr(_prctl,x) for x in _ALL_CAP_NAMES])
 ALL_FLAGS = tuple([getattr(_prctl,x) for x in _ALL_FLAG_NAMES])
+
 class Capbset(object):
-    __slots__ = _ALL_CAP_NAMES
+    __slots__ = ALL_CAP_NAMES
     def __init__(self):
         for name in _ALL_CAP_NAMES:
             friendly_name = name[4:].lower()
             setattr(self.__class__, friendly_name, capb_wrapper(getattr(_prctl, name)))
 
-    #def drop(self, *args):
-    #    for arg in args:
-    #        ....
+    def drop(self, *caps):
+        for cap in _parse_caps_simple(caps):
+            _prctl.prctl(_prctl.PR_CAPBSET_DROP, cap)
+
+    def limit(self, *caps):
+        for cap in [x for x in ALL_CAPS if x not in _parse_caps_simple(caps)]:
+            _prctl.prctl(_prctl.PR_CAPBSET_DROP, cap)
 
 capbset = Capbset()
 
 class Capset(object):
-    __slots__ = [name[4:].lower() for name in dir(_prctl) if name.startswith('CAP_')] + ['flag']
+    __slots__ = ALL_CAP_NAMES + ['flag']
     def __init__(self, flag):
         self.flag = flag
         for name in _ALL_CAP_NAMES:
             friendly_name = name[4:].lower()
             setattr(self.__class__, friendly_name, cap_wrapper(getattr(_prctl, name)))
+
+    def drop(self, *caps):
+        set_caps((_parse_caps_simple(caps), self.flag, False))
+
+    def limit(self, *caps):
+        set_caps(([x for x in ALL_CAPS if x not in _parse_caps_simple(caps)], self.flag, False))
 
 cap_effective = Capset(_prctl.CAP_EFFECTIVE)
 cap_inheritable = Capset(_prctl.CAP_INHERITABLE)
@@ -97,6 +110,20 @@ for name in dir(_prctl):
         # use the capbset/securebits object
         setattr(self, name, getattr(_prctl, name))
 
+def _parse_caps_simple(caps):
+    ret = []
+    for cap in caps:
+        if isinstance(cap, basestring):
+            if 'CAP_' + cap.upper() in _ALL_CAP_NAMES:
+                cap = 'CAP_' + cap.upper()
+            elif cap not in _ALL_CAP_NAMES:
+                raise ValueError("Unknown capability: %s" % cap)
+            cap = getattr(_prctl, cap)
+        elif cap not in ALL_CAPS:
+            raise ValueError("Unknown capability: %s" % str(cap))
+        ret.append(cap)
+    return ret
+
 def _parse_caps(has_value, *args):
     if has_value:
         new_args = {(_prctl.CAP_PERMITTED,True): [],
@@ -117,6 +144,7 @@ def _parse_caps(has_value, *args):
         # Accepted format: (cap|[cap,...], flag|[flag,...])
         if not (hasattr(caps, '__iter__') or hasattr(caps, '__getitem__')):
             caps = [caps]
+        caps = _parse_caps_simple(caps)
         if not (hasattr(flags, '__iter__') or hasattr(flags, '__getitem__')):
             flags = [flags]
         for cap in caps:

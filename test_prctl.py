@@ -59,6 +59,14 @@ class PrctlTest(unittest.TestCase):
             prctl.capbset.kill = False
             self.assertEqual(prctl.capbset.kill, False)
             self.assertEqual(prctl.capbset.sys_admin, True)
+            prctl.capbset.drop("setgid", prctl.CAP_SETGID)
+            self.assertEqual(prctl.capbset.setgid, False)
+            caps = list(prctl.ALL_CAPS)
+            caps.remove(prctl.CAP_NET_RAW)
+            prctl.capbset.limit(*caps)
+            self.assertEqual(prctl.capbset.net_raw, False)
+            self.assertEqual(prctl.capbset.net_broadcast, True)
+
         else:
             def set_false():
                 prctl.capbset.kill = False
@@ -232,11 +240,10 @@ class PrctlTest(unittest.TestCase):
                           {prctl.CAP_EFFECTIVE: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root},
                            prctl.CAP_INHERITABLE: {},
                            prctl.CAP_PERMITTED: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root}})
-        self.assertRaises(TypeError, prctl.get_caps, ('abc',prctl.ALL_FLAGS))
         self.assertRaises(KeyError, prctl.get_caps, (prctl.CAP_SYS_ADMIN,'abc'))
         def fail():
             prctl.get_caps((1234,prctl.ALL_FLAGS))
-        self.assertRaises(OSError, fail)
+        self.assertRaises(ValueError, fail)
 
     def test_setcaps(self):
         """Test the setcaps function"""
@@ -274,6 +281,17 @@ class PrctlTest(unittest.TestCase):
                 setattr(prctl.cap_inheritable, cap, True)
             else:
                 self.assertRaises(OSError, setattr, prctl.cap_inheritable, cap, True)
+
+        if self.am_root:
+            prctl.cap_effective.drop('linux_immutable', 'sys_boot', 'sys_pacct')
+            self.assertEqual(prctl.cap_effective.linux_immutable, False)
+            self.assertEqual(prctl.cap_effective.sys_boot, False)
+            self.assertEqual(prctl.cap_effective.sys_pacct, False)
+
+            caps = list(prctl.ALL_CAPS)
+            caps.remove(prctl.CAP_SYS_NICE)
+            prctl.cap_effective.limit(*caps)
+            self.assertEqual(prctl.cap_effective.sys_nice, False)
 
     def test_captoname(self):
         self.assertEqual(_prctl.cap_to_name(prctl.CAP_SYS_ADMIN), 'sys_admin')
