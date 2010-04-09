@@ -18,7 +18,7 @@ if sys.platform != 'linux2':
     sys.exit(1)
 
 kvers = os.uname()[2]
-if kvers < '2.6.26':
+if kvers < '2.6.26' and not os.environ.get("PRCTL_SKIP_KERNEL_CHECK",False):
     print >>sys.stderr, "This module requires linux 2.6.26 or newer"
     sys.exit(1)
 
@@ -54,7 +54,7 @@ _prctl = Extension("_prctl",
                    libraries = ['cap'])
 
 setup(name = "python-prctl",
-      version = "1.1",
+      version = "1.1.1",
       author = "Dennis Kaarsemaker",
       author_email = "dennis@kaarsemaker.net",
       url = "http://github.com/seveas/python-prctl",

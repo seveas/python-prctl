@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+export PRCTL_SKIP_KERNEL_CHECK = 1
+
 %:
 	dh $@
 
