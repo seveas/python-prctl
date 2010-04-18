@@ -2,6 +2,7 @@ Source: python-prctl
 Section: python
 Priority: extra
 Maintainer: Dennis Kaarsemaker <dennis@kaarsemaker.net>
+Uploaders: Andrew Pollock <apollock@debian.org>
 Build-Depends: debhelper (>= 7), python-support (>= 0.6.4), python-all-dev (>= 2.5), libcap-dev (>=2), python-sphinx (>= 0.6)
 Standards-Version: 3.8.4
 XS-Python-Version: >= 2.5
