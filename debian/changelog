@@ -1,8 +1,9 @@
 python-prctl (1.1.1-1) lucid; urgency=low
 
   * Allow the running kernel to be < 2.6.26, useful for buildds
+  * Initial release to debian proper (Closes: #578328) 
 
- -- Dennis Kaarsemaker <dennis@kaarsemaker.net>  Fri, 09 Apr 2010 00:45:20 +0200
+ -- Dennis Kaarsemaker <dennis@kaarsemaker.net>  Mon, 19 Apr 2010 21:55:57 +0200
 
 python-prctl (1.1-0~seveas1) lucid; urgency=low
 
