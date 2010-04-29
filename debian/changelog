@@ -1,3 +1,9 @@
+python-prctl (1.1.1-2) lucid; urgency=low
+
+  * Add debian/source/format to silence lintian
+
+ -- Dennis Kaarsemaker <dennis@kaarsemaker.net>  Thu, 29 Apr 2010 08:49:05 +0200
+
 python-prctl (1.1.1-1) unstable; urgency=low
 
   * Allow the running kernel to be < 2.6.26, useful for buildds
