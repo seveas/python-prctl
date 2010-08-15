@@ -33,9 +33,9 @@ def sec_wrapper(bit):
     def setter(self, value):
         bits = _prctl.prctl(_prctl.PR_GET_SECUREBITS)
         if value:
-            bits |= 1 << bit
+            bits |= bit
         else:
-            bits &= ~(1 << bit)
+            bits &= ~(bit)
         _prctl.prctl(_prctl.PR_SET_SECUREBITS, bits)
     return property(getter, setter)
 
@@ -83,10 +83,10 @@ cap_inheritable = Capset(_prctl.CAP_INHERITABLE)
 cap_permitted = Capset(_prctl.CAP_PERMITTED)
 
 class Securebits(object):
-    __slots__ = [name[7:].lower() for name in dir(_prctl) if name.startswith('SECURE_')]
+    __slots__ = [name[7:].lower() for name in dir(_prctl) if name.startswith('SECBIT_')]
     def __init__(self):
         for name in dir(_prctl):
-            if name.startswith('SECURE_'):
+            if name.startswith('SECBIT_'):
                 friendly_name = name[7:].lower()
                 setattr(self.__class__, friendly_name, sec_wrapper(getattr(_prctl, name)))
 
@@ -105,8 +105,8 @@ for name in dir(_prctl):
         # Add the argument constants without PR_ prefix
         setattr(self, name[3:], getattr(_prctl, name))
 
-    elif name.startswith(('CAP_','SECURE_')):
-        # Add CAP_*/SECURE_* constants verbatim. You shouldn't use them anyway,
+    elif name.startswith(('CAP_','SECBIT_','SECURE_')):
+        # Add CAP_*/SECBIT_*/SECURE_* constants verbatim. You shouldn't use them anyway,
         # use the capbset/securebits object
         setattr(self, name, getattr(_prctl, name))
 

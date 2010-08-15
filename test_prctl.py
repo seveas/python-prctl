@@ -36,7 +36,7 @@ class PrctlTest(unittest.TestCase):
     def test_constants(self):
         """Test whether copying of constants works"""
         self.assertEquals(prctl.ENDIAN_LITTLE, _prctl.PR_ENDIAN_LITTLE)
-        self.assertEquals(prctl.SECURE_NOROOT, _prctl.SECURE_NOROOT)
+        self.assertEquals(prctl.SECBIT_NOROOT, _prctl.SECBIT_NOROOT)
         self.assertEquals(prctl.CAP_SYS_ADMIN, _prctl.CAP_SYS_ADMIN)
         self.assertRaises(AttributeError, getattr, prctl, 'PR_ENDIAN_LITTLE')
         self.assertRaises(AttributeError, getattr, prctl, 'PR_CAPBSET_READ')
@@ -177,10 +177,10 @@ class PrctlTest(unittest.TestCase):
         """Test manipulation of the securebits flag"""
         self.assertEqual(prctl.get_securebits(), 0)
         if os.geteuid() == 0:
-            prctl.set_securebits(1 << prctl.SECURE_KEEP_CAPS)
-            self.assertEqual(prctl.get_securebits(), 1 << prctl.SECURE_KEEP_CAPS)
+            prctl.set_securebits(prctl.SECBIT_KEEP_CAPS)
+            self.assertEqual(prctl.get_securebits(), prctl.SECBIT_KEEP_CAPS)
         else:
-            self.assertRaises(OSError, prctl.set_securebits, 1 << prctl.SECURE_KEEP_CAPS)
+            self.assertRaises(OSError, prctl.set_securebits, prctl.SECBIT_KEEP_CAPS)
     
     def test_securebits_obj(self):
         """Test manipulation of the securebits via the securebits object"""

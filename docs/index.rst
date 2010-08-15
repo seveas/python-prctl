@@ -651,7 +651,7 @@ python-prctl.
 .. cfunction:: PyMODINIT_FUNC init_prctl(void)
 
   Create the module instance and add all the relevant constants to the module.
-  That means all :const:`PR_*`, :const:`CAP_*` and :const:`SECURE_*` constants
+  That means all :const:`PR_*`, :const:`CAP_*` and :const:`SECBIT_*` constants
   mentioned in :manpage:`prctl(2)` and :manpage:`capabilities(7)`. To avoid
   repeating yourself all the time, use the :cmacro:`namedconstant` and
   :cmacro:`namedattribute` macros when adding new values.
