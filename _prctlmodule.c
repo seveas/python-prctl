@@ -487,4 +487,10 @@ init_prctl(void)
     namedconstant(SECURE_KEEP_CAPS_LOCKED);
     namedconstant(SECURE_NO_SETUID_FIXUP_LOCKED);
     namedconstant(SECURE_NOROOT_LOCKED);
+    namedconstant(SECBIT_KEEP_CAPS);
+    namedconstant(SECBIT_NO_SETUID_FIXUP);
+    namedconstant(SECBIT_NOROOT);
+    namedconstant(SECBIT_KEEP_CAPS_LOCKED);
+    namedconstant(SECBIT_NO_SETUID_FIXUP_LOCKED);
+    namedconstant(SECBIT_NOROOT_LOCKED);
 }

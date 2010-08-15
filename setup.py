@@ -54,7 +54,7 @@ _prctl = Extension("_prctl",
                    libraries = ['cap'])
 
 setup(name = "python-prctl",
-      version = "1.1.1",
+      version = "1.2.0",
       author = "Dennis Kaarsemaker",
       author_email = "dennis@kaarsemaker.net",
       url = "http://github.com/seveas/python-prctl",
