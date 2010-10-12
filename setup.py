@@ -13,7 +13,7 @@ import sys
 # - Need gcc
 # - Need C headers
 # - Need libcap headers
-if sys.platform != 'linux2':
+if not sys.platform.startswith('linux2'):
     print >>sys.stderr, "This module only works on linux"
     sys.exit(1)
 
@@ -54,7 +54,7 @@ _prctl = Extension("_prctl",
                    libraries = ['cap'])
 
 setup(name = "python-prctl",
-      version = "1.2.0",
+      version = "1.2.1",
       author = "Dennis Kaarsemaker",
       author_email = "dennis@kaarsemaker.net",
       url = "http://github.com/seveas/python-prctl",
