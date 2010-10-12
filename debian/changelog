@@ -1,3 +1,10 @@
+python-prctl (1.2.1-1) unstable; urgency=low
+
+  * New upstream release, fixes building on sparc/hppa/alpha/mips
+    (Closes: #599955)
+
+ -- Dennis Kaarsemaker <dennis@kaarsemaker.net>  Tue, 12 Oct 2010 20:43:03 +0200
+
 python-prctl (1.2.0-1) unstable; urgency=low
 
   * New upstream release
