@@ -10,6 +10,17 @@
 #include <sys/prctl.h>
 #include <sys/signal.h>
 
+/* New in 2.6.32, but named and implemented inconsistently. The linux
+ * implementation has two ways of setting the policy to the default, and thus
+ * needs an extra argument. We ignore the first argument and always all
+ * PR_MCE_KILL_SET. This makes our implementation simpler and keeps the prctl
+ * interface more consistent
+ */
+#ifdef PR_MCE_KILL
+#define PR_GET_MCE_KILL PR_MCE_KILL_GET
+#define PR_SET_MCE_KILL PR_MCE_KILL
+#endif
+
 /* New in 2.6.XX (Ubuntu 10.10) */
 #define NOT_SET (-1)
 #ifdef PR_SET_PTRACER
@@ -91,6 +102,14 @@ prctl_prctl(PyObject *self, PyObject *args)
                 return NULL;
             }
             break;
+#ifdef PR_MCE_KILL
+        case(PR_SET_MCE_KILL):
+            if(arg != PR_MCE_KILL_DEFAULT && arg != PR_MCE_KILL_EARLY && arg != PR_MCE_KILL_LATE) {
+                PyErr_SetString(PyExc_ValueError, "Unknown memory corruption kill policy");
+                return NULL;
+            }
+            break;
+#endif
         case(PR_SET_NAME):
             if(strlen(argstr) > 16) {
                 /* FIXME: warn */
@@ -157,6 +176,9 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_SET_FPEXC):
         case(PR_SET_KEEPCAPS):
         case(PR_GET_KEEPCAPS):
+#ifdef PR_MCE_KILL
+        case(PR_GET_MCE_KILL):
+#endif
         case(PR_SET_PDEATHSIG):
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
         case(PR_GET_PTRACER):
@@ -184,6 +206,9 @@ prctl_prctl(PyObject *self, PyObject *args)
                 case(PR_GET_SECCOMP):
                 case(PR_GET_TIMING):
                     return PyBool_FromLong(result);
+#ifdef PR_MCE_KILL
+                case(PR_GET_MCE_KILL):
+#endif
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
                 case(PR_GET_PTRACER):
 #endif
@@ -224,6 +249,15 @@ prctl_prctl(PyObject *self, PyObject *args)
             if(__cached_ptracer == NOT_SET)
                 return PyInt_FromLong(getppid());
             return PyInt_FromLong(__cached_ptracer);
+#endif
+#ifdef PR_MCE_KILL
+        case(PR_SET_MCE_KILL):
+            result = prctl(option, PR_MCE_KILL_SET, arg, 0, 0);
+            if(result < 0) {
+                PyErr_SetFromErrno(PyExc_OSError);
+                return NULL;
+            }
+            break;
 #endif
         default:
             PyErr_SetString(PyExc_ValueError, "Unkown prctl option");
@@ -460,6 +494,12 @@ init_prctl(void)
     namedconstant(PR_FP_EXC_ASYNC);
     namedconstant(PR_FP_EXC_PRECISE);
     namedattribute(KEEPCAPS);
+#ifdef PR_MCE_KILL
+    namedattribute(MCE_KILL);
+    namedconstant(PR_MCE_KILL_DEFAULT);
+    namedconstant(PR_MCE_KILL_EARLY);
+    namedconstant(PR_MCE_KILL_LATE);
+#endif
     namedattribute(NAME);
     namedattribute(PDEATHSIG);
 #ifdef PR_SET_PTRACER

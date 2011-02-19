@@ -135,6 +135,25 @@ The prctl module is now ready to use.
 
   Return the current state of the calling threads's "keep capabilities" flag.
 
+.. function:: set_mce_kill(policy)
+.. versionadded:: 1.3 This is only available for kernel 2.6.32 and newer
+
+  Set the machine check memory corruption kill policy for the current thread.
+  The policy can be early kill (:const:`MCE_KILL_EARLY`), late kill
+  (:const:`MCE_KILL_LATE`), or the system-wide default
+  (:const:`MCE_KILL_DEFAULT`).  Early kill means that the task receives a
+  :const:`SIGBUS` signal as soon as hardware memory corruption is detected
+  inside its address space. In late kill mode, the process is only killed when
+  it accesses a corrupted page.  The policy is inherited by children.  use the
+  system-wide default. The system-wide default is defined by
+  :file:`/proc/sys/vm/memory_failure_early_kill`
+
+
+.. function:: get_mce_kill()
+.. versionadded:: 1.3 This is only available for kernel 2.6.32 and newer
+
+  Return the current per-process machine check kill policy.
+
 .. function:: set_name(name)
 
   Set the process name for the calling process, the name can be up to 16 bytes

@@ -130,6 +130,20 @@ class PrctlTest(unittest.TestCase):
         prctl.set_keepcaps(False)
         self.assertEqual(prctl.get_keepcaps(), False)
 
+    def test_mce_kill(self):
+        """Test the MCE_KILL setting"""
+        if not hasattr(prctl, 'set_mce_kill'):
+            return
+        fd = open('/proc/sys/vm/memory_failure_early_kill')
+        current = int(fd.read().strip())
+        fd.close()
+        prctl.set_mce_kill(prctl.MCE_KILL_EARLY)
+        self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_EARLY)
+        prctl.set_mce_kill(prctl.MCE_KILL_LATE)
+        self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_LATE)
+        prctl.set_mce_kill(prctl.MCE_KILL_DEFAULT)
+        self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_DEFAULT)
+
     def test_name(self):
         """Test setting the process name"""
         name = prctl.get_name().swapcase() * 16
