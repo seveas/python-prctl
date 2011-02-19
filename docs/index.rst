@@ -174,6 +174,20 @@ The prctl module is now ready to use.
   Return the current value of the parent process death signal. See
   :func:`set_pdeathsig`.
 
+.. function:: set_ptracer(pid)
+.. versionadded:: 1.3 This is an ubuntu specific patch, appearing as of Ubuntu 10.10
+
+  Sets the top of the process tree that is allowed to use :func:`PTRACE` on the
+  calling process, assuming other requirements are met (matching uid, wasn't
+  setuid, etc). Use pid 0 to disallow all processes. For more details, see
+  :file:`/etc/sysctl.d/10-ptrace.conf`.
+
+.. function:: get_ptracer(pid)
+.. versionadded:: 1.3 This is an ubuntu specific patch, appearing as of Ubuntu 10.10
+
+  Returns the top of the process tree that is allowed to use :func:`PTRACE` on
+  the calling process. See :func:`set_ptracer`.
+
 .. function:: set_seccomp(mode)
 
   Set the secure computing mode for the calling thread. In the current

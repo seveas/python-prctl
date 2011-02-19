@@ -10,6 +10,17 @@
 #include <sys/prctl.h>
 #include <sys/signal.h>
 
+/* New in 2.6.XX (Ubuntu 10.10) */
+#define NOT_SET (-1)
+#ifdef PR_SET_PTRACER
+/* This one has no getter for some reason, but guard agains that being fixed  */
+#ifndef PR_GET_PTRACER
+#define PR_GET_PTRACER NOT_SET
+/* Icky global variable to cache ptracer */
+static int __cached_ptracer = NOT_SET;
+#endif
+#endif
+
 /* This function is not in Python.h, so define it here */
 void Py_GetArgcArgv(int*, char***);
 
@@ -147,6 +158,12 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_SET_KEEPCAPS):
         case(PR_GET_KEEPCAPS):
         case(PR_SET_PDEATHSIG):
+#if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
+        case(PR_GET_PTRACER):
+#endif
+#ifdef PR_SET_PTRACER
+        case(PR_SET_PTRACER):
+#endif
         case(PR_SET_SECCOMP):
         case(PR_GET_SECCOMP):
         case(PR_SET_SECUREBITS):
@@ -167,8 +184,16 @@ prctl_prctl(PyObject *self, PyObject *args)
                 case(PR_GET_SECCOMP):
                 case(PR_GET_TIMING):
                     return PyBool_FromLong(result);
+#if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
+                case(PR_GET_PTRACER):
+#endif
                 case(PR_GET_SECUREBITS):
                     return PyInt_FromLong(result);
+#if defined(PR_GET_PTRACER) && (PR_GET_PTRACER == NOT_SET)
+                case(PR_SET_PTRACER):
+                    __cached_ptracer = arg;
+                    break;
+#endif
             }
             break;
         case(PR_GET_ENDIAN):
@@ -194,6 +219,12 @@ prctl_prctl(PyObject *self, PyObject *args)
                 return PyString_FromString(name);
             }
             break;
+#if defined(PR_GET_PTRACER) && (PR_GET_PTRACER == NOT_SET)
+        case(PR_GET_PTRACER):
+            if(__cached_ptracer == NOT_SET)
+                return PyInt_FromLong(getppid());
+            return PyInt_FromLong(__cached_ptracer);
+#endif
         default:
             PyErr_SetString(PyExc_ValueError, "Unkown prctl option");
             return NULL;
@@ -431,6 +462,9 @@ init_prctl(void)
     namedattribute(KEEPCAPS);
     namedattribute(NAME);
     namedattribute(PDEATHSIG);
+#ifdef PR_SET_PTRACER
+    namedattribute(PTRACER);
+#endif
     namedattribute(SECCOMP);
     namedattribute(SECUREBITS);
     namedattribute(TIMING);

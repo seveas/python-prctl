@@ -157,6 +157,21 @@ class PrctlTest(unittest.TestCase):
         prctl.set_pdeathsig(signal.SIGINT)
         self.assertEqual(prctl.get_pdeathsig(), signal.SIGINT)
 
+    def test_ptracer(self):
+        """Test manipulation of the ptracer setting"""
+        if not hasattr(prctl, 'set_ptracer'):
+            return
+        self.assertEqual(prctl.get_ptracer(), os.getppid())
+        prctl.set_ptracer(1)
+        self.assertEqual(prctl.get_ptracer(), 1)
+        self.assertRaises(OSError, prctl.set_ptracer, -1)
+        new_pid = os.fork()
+        if new_pid:
+            os.waitpid(new_pid, 0)
+        else:
+            os._exit(0)
+        self.assertRaises(OSError, prctl.set_ptracer, new_pid)
+
     def test_seccomp(self):
         """Test manipulation of the seccomp setting"""
         self.assertEqual(prctl.get_seccomp(), False)
