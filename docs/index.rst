@@ -131,7 +131,11 @@ The prctl module is now ready to use.
   are cleared). This value will be reset to :const:`False` on subsequent calls
   to :func:`execve`.
 
-.. function:: set_name(flag)
+.. function:: get_keepcaps()
+
+  Return the current state of the calling threads's "keep capabilities" flag.
+
+.. function:: set_name(name)
 
   Set the process name for the calling process, the name can be up to 16 bytes
   long. This name is displayed in the output of :command:`ps` and
@@ -175,7 +179,7 @@ The prctl module is now ready to use.
   :func:`set_pdeathsig`.
 
 .. function:: set_ptracer(pid)
-.. versionadded:: 1.3 This is an ubuntu specific patch, appearing as of Ubuntu 10.10
+.. versionadded:: 1.3 This is an ubuntu specific call, appearing as of Ubuntu 10.10
 
   Sets the top of the process tree that is allowed to use :func:`PTRACE` on the
   calling process, assuming other requirements are met (matching uid, wasn't
@@ -183,7 +187,7 @@ The prctl module is now ready to use.
   :file:`/etc/sysctl.d/10-ptrace.conf`.
 
 .. function:: get_ptracer(pid)
-.. versionadded:: 1.3 This is an ubuntu specific patch, appearing as of Ubuntu 10.10
+.. versionadded:: 1.3 This is an ubuntu specific call, appearing as of Ubuntu 10.10
 
   Returns the top of the process tree that is allowed to use :func:`PTRACE` on
   the calling process. See :func:`set_ptracer`.
