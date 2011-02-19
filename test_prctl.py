@@ -227,6 +227,16 @@ class PrctlTest(unittest.TestCase):
                 prctl.securebits.noroot = True
             self.assertRaises(OSError, set_true)
 
+    def test_timerslack(self):
+        """Test manipulation of the timerslack value"""
+        if not hasattr(prctl, 'get_timerslack'):
+            return
+        default = prctl.get_timerslack()
+        prctl.set_timerslack(1000)
+        self.assertEqual(prctl.get_timerslack(), 1000)
+        prctl.set_timerslack(0)
+        self.assertEqual(prctl.get_timerslack(), default)
+
     def test_timing(self):
         """Test manipulation of the timing setting"""
         self.assertRaises(OSError, prctl.set_timing, prctl.TIMING_TIMESTAMP);

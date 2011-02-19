@@ -233,6 +233,21 @@ The prctl module is now ready to use.
   operation is only available if the kernel is configured with
   :const:`CONFIG_SECCOMP` enabled.
 
+.. function:: set_timerslack()
+.. versionadded:: 1.3 This is only available for kernel 2.6.28 and newer
+
+  Control the default "rounding" in nqnoseconds that is used by :func:`select`,
+  :func:`poll` and friends.
+
+  The default value of the slack is 50 microseconds; this is significantly less
+  than the kernels average timing error but still allows the kernel to group
+  timers somewhat to preserve power behavior.
+
+.. function:: get_timerslack(value)
+.. versionadded:: 1.3 This is only available for kernel 2.6.28 and newer
+
+  Return the current timing slack, see :func:`get_timing_slack`
+
 .. function:: set_timing(flag)
 
   Set whether to use (normal, traditional) statistical process timing or

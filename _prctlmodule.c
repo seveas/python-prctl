@@ -190,6 +190,10 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_GET_SECCOMP):
         case(PR_SET_SECUREBITS):
         case(PR_GET_SECUREBITS):
+#ifdef PR_GET_TIMERSLACK
+        case(PR_GET_TIMERSLACK):
+        case(PR_SET_TIMERSLACK):
+#endif
         case(PR_SET_TIMING):
         case(PR_GET_TIMING):
         case(PR_SET_TSC):
@@ -213,6 +217,9 @@ prctl_prctl(PyObject *self, PyObject *args)
                 case(PR_GET_PTRACER):
 #endif
                 case(PR_GET_SECUREBITS):
+#ifdef PR_GET_TIMERSLACK
+                case(PR_GET_TIMERSLACK):
+#endif
                     return PyInt_FromLong(result);
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER == NOT_SET)
                 case(PR_SET_PTRACER):
@@ -507,6 +514,9 @@ init_prctl(void)
 #endif
     namedattribute(SECCOMP);
     namedattribute(SECUREBITS);
+#ifdef PR_GET_TIMERSLACK
+    namedattribute(TIMERSLACK);
+#endif
     namedattribute(TIMING);
     namedconstant(PR_TIMING_STATISTICAL);
     namedconstant(PR_TIMING_TIMESTAMP);
