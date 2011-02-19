@@ -131,7 +131,30 @@ The prctl module is now ready to use.
   are cleared). This value will be reset to :const:`False` on subsequent calls
   to :func:`execve`.
 
-.. function:: set_name(flag)
+.. function:: get_keepcaps()
+
+  Return the current state of the calling threads's "keep capabilities" flag.
+
+.. function:: set_mce_kill(policy)
+.. versionadded:: 1.3 This is only available for kernel 2.6.32 and newer
+
+  Set the machine check memory corruption kill policy for the current thread.
+  The policy can be early kill (:const:`MCE_KILL_EARLY`), late kill
+  (:const:`MCE_KILL_LATE`), or the system-wide default
+  (:const:`MCE_KILL_DEFAULT`).  Early kill means that the task receives a
+  :const:`SIGBUS` signal as soon as hardware memory corruption is detected
+  inside its address space. In late kill mode, the process is only killed when
+  it accesses a corrupted page.  The policy is inherited by children.  use the
+  system-wide default. The system-wide default is defined by
+  :file:`/proc/sys/vm/memory_failure_early_kill`
+
+
+.. function:: get_mce_kill()
+.. versionadded:: 1.3 This is only available for kernel 2.6.32 and newer
+
+  Return the current per-process machine check kill policy.
+
+.. function:: set_name(name)
 
   Set the process name for the calling process, the name can be up to 16 bytes
   long. This name is displayed in the output of :command:`ps` and
@@ -174,6 +197,20 @@ The prctl module is now ready to use.
   Return the current value of the parent process death signal. See
   :func:`set_pdeathsig`.
 
+.. function:: set_ptracer(pid)
+.. versionadded:: 1.3 This is an ubuntu specific call, appearing as of Ubuntu 10.10
+
+  Sets the top of the process tree that is allowed to use :func:`PTRACE` on the
+  calling process, assuming other requirements are met (matching uid, wasn't
+  setuid, etc). Use pid 0 to disallow all processes. For more details, see
+  :file:`/etc/sysctl.d/10-ptrace.conf`.
+
+.. function:: get_ptracer(pid)
+.. versionadded:: 1.3 This is an ubuntu specific call, appearing as of Ubuntu 10.10
+
+  Returns the top of the process tree that is allowed to use :func:`PTRACE` on
+  the calling process. See :func:`set_ptracer`.
+
 .. function:: set_seccomp(mode)
 
   Set the secure computing mode for the calling thread. In the current
@@ -195,6 +232,21 @@ The prctl module is now ready to use.
   will cause a :const:`~signal.SIGKILL` signal to be sent to the process. This
   operation is only available if the kernel is configured with
   :const:`CONFIG_SECCOMP` enabled.
+
+.. function:: set_timerslack()
+.. versionadded:: 1.3 This is only available for kernel 2.6.28 and newer
+
+  Control the default "rounding" in nqnoseconds that is used by :func:`select`,
+  :func:`poll` and friends.
+
+  The default value of the slack is 50 microseconds; this is significantly less
+  than the kernels average timing error but still allows the kernel to group
+  timers somewhat to preserve power behavior.
+
+.. function:: get_timerslack(value)
+.. versionadded:: 1.3 This is only available for kernel 2.6.28 and newer
+
+  Return the current timing slack, see :func:`get_timing_slack`
 
 .. function:: set_timing(flag)
 

@@ -130,6 +130,20 @@ class PrctlTest(unittest.TestCase):
         prctl.set_keepcaps(False)
         self.assertEqual(prctl.get_keepcaps(), False)
 
+    def test_mce_kill(self):
+        """Test the MCE_KILL setting"""
+        if not hasattr(prctl, 'set_mce_kill'):
+            return
+        fd = open('/proc/sys/vm/memory_failure_early_kill')
+        current = int(fd.read().strip())
+        fd.close()
+        prctl.set_mce_kill(prctl.MCE_KILL_EARLY)
+        self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_EARLY)
+        prctl.set_mce_kill(prctl.MCE_KILL_LATE)
+        self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_LATE)
+        prctl.set_mce_kill(prctl.MCE_KILL_DEFAULT)
+        self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_DEFAULT)
+
     def test_name(self):
         """Test setting the process name"""
         name = prctl.get_name().swapcase() * 16
@@ -156,6 +170,21 @@ class PrctlTest(unittest.TestCase):
         self.assertEqual(prctl.get_pdeathsig(), 0)
         prctl.set_pdeathsig(signal.SIGINT)
         self.assertEqual(prctl.get_pdeathsig(), signal.SIGINT)
+
+    def test_ptracer(self):
+        """Test manipulation of the ptracer setting"""
+        if not hasattr(prctl, 'set_ptracer'):
+            return
+        self.assertEqual(prctl.get_ptracer(), os.getppid())
+        prctl.set_ptracer(1)
+        self.assertEqual(prctl.get_ptracer(), 1)
+        self.assertRaises(OSError, prctl.set_ptracer, -1)
+        new_pid = os.fork()
+        if new_pid:
+            os.waitpid(new_pid, 0)
+        else:
+            os._exit(0)
+        self.assertRaises(OSError, prctl.set_ptracer, new_pid)
 
     def test_seccomp(self):
         """Test manipulation of the seccomp setting"""
@@ -197,6 +226,16 @@ class PrctlTest(unittest.TestCase):
             def set_true():
                 prctl.securebits.noroot = True
             self.assertRaises(OSError, set_true)
+
+    def test_timerslack(self):
+        """Test manipulation of the timerslack value"""
+        if not hasattr(prctl, 'get_timerslack'):
+            return
+        default = prctl.get_timerslack()
+        prctl.set_timerslack(1000)
+        self.assertEqual(prctl.get_timerslack(), 1000)
+        prctl.set_timerslack(0)
+        self.assertEqual(prctl.get_timerslack(), default)
 
     def test_timing(self):
         """Test manipulation of the timing setting"""
