@@ -13,7 +13,7 @@ import sys
 # - Need gcc
 # - Need C headers
 # - Need libcap headers
-if not sys.platform.startswith('linux2'):
+if not sys.platform.startswith('linux'):
     print >>sys.stderr, "This module only works on linux"
     sys.exit(1)
 
