@@ -527,6 +527,13 @@ These are the attributes (:class:`set` refers to each of the above objects):
   :func:`setreuid`, :func:`setresuid`, :func:`setfsuid`); make forged UID when
   passing socket credentials via Unix domain sockets.
 
+.. attribute:: set.syslog
+
+  Allow configuring the kernel's syslog (printk behaviour). Before linux 2.6.38
+  the :attr:`sys_admin` capability was needed for this.
+
+  This is only available in linux 2.6.38 and newer
+
 .. attribute:: set.sys_admin
 
   * Perform a range of system administration operations including:
@@ -608,6 +615,12 @@ These are the attributes (:class:`set` refers to each of the above objects):
 .. attribute:: set.sys_tty_config
 
   Use :func:`vhangup`.
+
+.. attribute:: set.wake_alarm
+
+  Allow triggering something that will wake the system.
+
+  This is only available in linux 3.0 and newer
 
 The four capabilities objects also have two additional methods, to make
 dropping many capabilities at the same time easier:
