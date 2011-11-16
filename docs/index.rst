@@ -109,7 +109,7 @@ The prctl module is now ready to use.
   :const:`FP_EXC_DISABLED` for FP exceptions disabled, :const:`FP_EXC_NONRECOV`
   for async non-recoverable exception mode, :const:`FP_EXC_ASYNC` for async
   recoverable exception mode, :const:`FP_EXC_PRECISE` for precise exception
-  mode. Modes can be combined with the :keyword:`|` operator.
+  mode. Modes can be combined with the :const:`|` operator.
 
   .. note:: 
 
@@ -136,7 +136,6 @@ The prctl module is now ready to use.
   Return the current state of the calling threads's "keep capabilities" flag.
 
 .. function:: set_mce_kill(policy)
-.. versionadded:: 1.3 This is only available for kernel 2.6.32 and newer
 
   Set the machine check memory corruption kill policy for the current thread.
   The policy can be early kill (:const:`MCE_KILL_EARLY`), late kill
@@ -148,11 +147,13 @@ The prctl module is now ready to use.
   system-wide default. The system-wide default is defined by
   :file:`/proc/sys/vm/memory_failure_early_kill`
 
+  This is only available in linux 2.6.32 and newer
 
 .. function:: get_mce_kill()
-.. versionadded:: 1.3 This is only available for kernel 2.6.32 and newer
 
   Return the current per-process machine check kill policy.
+
+  This is only available in linux 2.6.32 and newer
 
 .. function:: set_name(name)
 
@@ -172,11 +173,11 @@ The prctl module is now ready to use.
 .. function:: set_proctitle(title)
 
   Set the process name for the calling process by overwriting the C-level
-  :cdata:`**argv` variable. The original value of :cdata:`**argv` is then no
+  :c:data:`**argv` variable. The original value of :c:data:`**argv` is then no
   longer visible. in :command:`ps`, :command:`proc`, or
   :file:`/proc/self/cmdline`.
 
-  Names longer that what fits in :cdata:`**argv` will be silently truncated. To
+  Names longer that what fits in :c:data:`**argv` will be silently truncated. To
   set a longer title, make your application accept bogus arguments and call the
   application with these arguments.
 
@@ -198,18 +199,20 @@ The prctl module is now ready to use.
   :func:`set_pdeathsig`.
 
 .. function:: set_ptracer(pid)
-.. versionadded:: 1.3 This is an ubuntu specific call, appearing as of Ubuntu 10.10
 
   Sets the top of the process tree that is allowed to use :func:`PTRACE` on the
   calling process, assuming other requirements are met (matching uid, wasn't
   setuid, etc). Use pid 0 to disallow all processes. For more details, see
   :file:`/etc/sysctl.d/10-ptrace.conf`.
 
+  This is an ubuntu specific extension, appearing as of Ubuntu 10.10
+
 .. function:: get_ptracer(pid)
-.. versionadded:: 1.3 This is an ubuntu specific call, appearing as of Ubuntu 10.10
 
   Returns the top of the process tree that is allowed to use :func:`PTRACE` on
   the calling process. See :func:`set_ptracer`.
+
+  This is an ubuntu specific extension, appearing as of Ubuntu 10.10
 
 .. function:: set_seccomp(mode)
 
@@ -234,7 +237,6 @@ The prctl module is now ready to use.
   :const:`CONFIG_SECCOMP` enabled.
 
 .. function:: set_timerslack()
-.. versionadded:: 1.3 This is only available for kernel 2.6.28 and newer
 
   Control the default "rounding" in nqnoseconds that is used by :func:`select`,
   :func:`poll` and friends.
@@ -243,10 +245,13 @@ The prctl module is now ready to use.
   than the kernels average timing error but still allows the kernel to group
   timers somewhat to preserve power behavior.
 
+  This is only available in linux 2.6.28 and newer
+
 .. function:: get_timerslack(value)
-.. versionadded:: 1.3 This is only available for kernel 2.6.28 and newer
 
   Return the current timing slack, see :func:`get_timing_slack`
+
+  This is only available in linux 2.6.28 and newer
 
 .. function:: set_timing(flag)
 
@@ -377,9 +382,9 @@ Effective (the :attr:`~prctl.cap_effective` object):
   This is the set of capabilities used by the kernel to perform permission
   checks for the thread.
 
-  A child created via :func:`fork` inherits copies of its parent's capability
-  sets. See the :manpage:`capabilities(7)` manpage for a discussion of the
-  treatment of capabilities during :func:`execve`.
+A child created via :func:`fork` inherits copies of its parent's capability
+sets. See below for a discussion of the treatment of capabilities during
+:func:`execve`.
 
 The :attr:`~prctl.capbset` object represents the current capability bounding
 set of the process. The capability bounding set dictates whether the process
@@ -591,7 +596,7 @@ These are the attributes (:class:`set` refers to each of the above objects):
   * Override disk quota limits.
   * Increase resource limits (see :manpage:`setrlimit(2)`).
   * Override :const:`RLIMIT_NPROC` resource limit.
-  * Raise :cdata:`msg_qbytes` limit for a System V message queue above the
+  * Raise :c:data:`msg_qbytes` limit for a System V message queue above the
     limit in :file:`/proc/sys/kernel/msgmnb` (see :manpage:`msgop(2)` and
     :manpage:`msgctl(2)`).
 
@@ -618,6 +623,49 @@ dropping many capabilities at the same time easier:
 These function accept both names of capabilities as given above and the
 :data:`CAP_` constants as defined in :file:`capabilities.h`. These constants
 are available as :attr:`prctl.CAP_SYS_ADMIN` et cetera.
+
+Capabilities and :func:`execve`
+===============================
+During an :func:`execve`, the kernel calculates the new capabilities of the process
+using the following algorithm:
+
+* P'(permitted) = (P(inheritable) & F(inheritable)) | (F(permitted) & cap_bset)
+* P'(effective) = F(effective) ? P'(permitted) : 0
+* P'(inheritable) = P(inheritable) [i.e., unchanged]
+
+Where:
+
+* P denotes the value of a thread capability set before the :func:`execve`
+* P' denotes the value of a capability set after the :func:`execve`
+* F denotes a file capability set
+* cap_bset is the value of the capability bounding set
+
+The downside of this is that you need to set file capabilities if you want to
+make applications capabilities-friendly via wrappers. For instance, to allow an
+http daemon to listen on port 80 without it needing root privileges, you could
+do the following:
+
+.. code-block:: python
+
+  prctl.cap_inheritable.net_bind_service = True
+  os.setuid(pwd.getpwnam('www-data').pw_uid)
+  os.execve("/usr/sbin/httpd", ["/usr/sbin/httpd"], os.environ)
+
+This only works if :file:`/usr/sbin/httpd` has :attr:`CAP_NET_BIND_SOCK` in its
+inheritable and effective sets. You can do this with the :command:`setcap` tool
+shipped with libcap.
+
+.. code-block:: sh
+
+  $ sudo setcap cap_net_bind_service=ie /usr/sbin/httpd
+  $ getcap /usr/sbin/httpd
+  /usr/sbin/httpd = cap_net_bind_service+ei
+
+Note that it only sets the capability in the inheritable set, so this
+capability is only granted if the program calling execve has it in its
+inheritable set too. The effective set of file capabilities does not exist in
+linux, it is a single bit that specifies whether capabilities in the permitted
+set are automatically raised in the effective set upon :func:`execve`.
 
 Establishing a capabilities-only environment with securebits
 ============================================================
@@ -673,7 +721,7 @@ The following attributes are available:
    :synopsis: Basic wrapper around prctl
 .. moduleauthor:: Dennis Kaarsemaker <dennis@kaarsemaker.net>
 
-This is the lower level C module that wraps the :cfunc:`prctl` syscall in a way
+This is the lower level C module that wraps the :c:func:`prctl` syscall in a way
 that it is easy to call from a python module. It should not be used directly,
 applications and other libraries should use the functionality provided by the
 :mod:`prctl` module.
@@ -681,9 +729,9 @@ applications and other libraries should use the functionality provided by the
 This section of the documentation is meant for people who want to contribute to
 python-prctl.
 
-.. cfunction:: static PyObject\* prctl_prctl(PyObject \*self, PyObject \*args)
+.. c:function:: static PyObject\* prctl_prctl(PyObject \*self, PyObject \*args)
 
-  This is the :cfunc:`prctl` wrapper. It accepts as argument either one or two
+  This is the :c:func:`prctl` wrapper. It accepts as argument either one or two
   :obj:`int` variables or an :obj:`int` and a :obj:`str`.
 
   The mandatory first int must be one of the :const:`PR_SET_*`,
@@ -691,22 +739,22 @@ python-prctl.
   :file:`sys/prctl.h`. The accepted values of the second argument depend on the
   first argument, see :manpage:`prctl(2)`.
 
-  The function validates arguments, calls :cfunc:`prctl` in the
+  The function validates arguments, calls :c:func:`prctl` in the
   argument-specific way and returns the proper value, whether :func:`prctl`
   returns it as return value or stores it in one of the parameters.
 
-.. cfunction:: static PyObject\* prctl_set_proctitle(PyObject \*self, PyObject \*args)
+.. c:function:: static PyObject\* prctl_set_proctitle(PyObject \*self, PyObject \*args)
 
   Set the process title by mangling :data:`**argv`. Mandatory argument is a
   :obj:`str`.
 
-.. cfunction:: PyMODINIT_FUNC init_prctl(void)
+.. c:function:: PyMODINIT_FUNC init_prctl(void)
 
   Create the module instance and add all the relevant constants to the module.
   That means all :const:`PR_*`, :const:`CAP_*` and :const:`SECBIT_*` constants
   mentioned in :manpage:`prctl(2)` and :manpage:`capabilities(7)`. To avoid
-  repeating yourself all the time, use the :cmacro:`namedconstant` and
-  :cmacro:`namedattribute` macros when adding new values.
+  repeating yourself all the time, use the :c:macro:`namedconstant` and
+  :c:macro:`namedattribute` macros when adding new values.
 
 .. toctree::
    :maxdepth: 2
