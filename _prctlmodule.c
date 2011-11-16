@@ -564,6 +564,12 @@ init_prctl(void)
     namedconstant(CAP_SETFCAP);
     namedconstant(CAP_MAC_OVERRIDE);
     namedconstant(CAP_MAC_ADMIN);
+#ifdef CAP_SYSLOG
+    namedconstant(CAP_SYSLOG);
+#endif
+#ifdef CAP_WAKE_ALARM
+    namedconstant(CAP_WAKE_ALARM);
+#endif
     /* And the securebits constants */
     namedconstant(SECURE_KEEP_CAPS);
     namedconstant(SECURE_NO_SETUID_FIXUP);
