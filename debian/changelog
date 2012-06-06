@@ -1,3 +1,10 @@
+python-prctl (1.5.0-1) unstable; urgency=low
+
+  * New upstream release: python 3 and linux 3.new compatibility
+  * Reworked the packaging to include a python3 package as well
+
+ -- Dennis Kaarsemaker <dennis@kaarsemaker.net>  Wed, 06 Jun 2012 12:19:08 +0200
+
 python-prctl (1.4.0-1) unstable; urgency=low
 
   * New upstream release: new capabilities and more documentation
