@@ -14,35 +14,35 @@ import sys
 # - Need C headers
 # - Need libcap headers
 if not sys.platform.startswith('linux'):
-    print >>sys.stderr, "This module only works on linux"
+    sys.stderr.write("This module only works on linux\n")
     sys.exit(1)
 
 kvers = os.uname()[2]
 if kvers < '2.6.26' and not os.environ.get("PRCTL_SKIP_KERNEL_CHECK",False):
-    print >>sys.stderr, "This module requires linux 2.6.26 or newer"
+    sys.stderr.write("This module requires linux 2.6.26 or newer\n")
     sys.exit(1)
 
-if sys.version_info[0] != 2 or sys.version_info[1] < 5:
-    print >>sys.stderr, "This module requires python 2.5 or newer (but not 3.x)"
+if sys.version_info[:2] < (2,5):
+    sys.stderr.write("This module requires python 2.5 or newer\n")
     sys.exit(1)
 
 exit = False
 try:
     subprocess.call(['gcc','-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except:
-    print >>sys.stderr, "You need to install gcc to build this module"
+    sys.stderr.write("You need to install gcc to build this module\n")
     exit = True
 
 sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-sp.communicate('#include <sys/prctl.h>\n')
+sp.communicate('#include <sys/prctl.h>\n'.encode())
 if sp.returncode:
-    print >>sys.stderr, "You need to install libc development headers to build this module"
+    sys.stderr.write("You need to install libc development headers to build this module\n")
     exit = True
 
 sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-sp.communicate('#include <sys/capability.h>\n')
+sp.communicate('#include <sys/capability.h>\n'.encode())
 if sp.returncode:
-    print >>sys.stderr, "You need to install libcap development headers to build this module"
+    sys.stderr.write("You need to install libcap development headers to build this module\n")
     exit = True
 
 if exit:
@@ -54,7 +54,7 @@ _prctl = Extension("_prctl",
                    libraries = ['cap'])
 
 setup(name = "python-prctl",
-      version = "1.4.0",
+      version = "1.5.0",
       author = "Dennis Kaarsemaker",
       author_email = "dennis@kaarsemaker.net",
       url = "http://github.com/seveas/python-prctl",
@@ -67,7 +67,7 @@ setup(name = "python-prctl",
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: C',
-        'Programming Language :: Python :: 2',
+        'Programming Language :: Python',
         'Topic :: Security',
       ]
 )

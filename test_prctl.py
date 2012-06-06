@@ -11,16 +11,23 @@ import sys
 import subprocess
 import unittest
 
+so = '.so'
+try:
+    import sysconfig
+    so = sysconfig.get_config_var('SO')
+except ImportError:
+    pass
+
 curdir = os.path.dirname(__file__)
 builddir = os.path.join(curdir, 'build', 'lib.%s-%s' % (distutils.util.get_platform(), sys.version[0:3]))
 
 # Always run from the builddir
 if not os.path.exists(builddir) or \
    not os.path.exists(os.path.join(builddir, 'prctl.py')) or \
-   not os.path.exists(os.path.join(builddir, '_prctl.so')) or \
+   not os.path.exists(os.path.join(builddir, '_prctl' + so)) or \
    os.path.getmtime(os.path.join(curdir, 'prctl.py')) > os.path.getmtime(os.path.join(builddir, 'prctl.py')) or \
-   os.path.getmtime(os.path.join(curdir, '_prctlmodule.c')) > os.path.getmtime(os.path.join(builddir, '_prctl.so')):
-     print >>sys.stderr, "Please build the extension first, using ./setup.py build"
+   os.path.getmtime(os.path.join(curdir, '_prctlmodule.c')) > os.path.getmtime(os.path.join(builddir, '_prctl' + so)):
+     sys.stderr.write("Please build the extension first, using ./setup.py build\n")
      sys.exit(1)
 sys.path.insert(0, builddir)
 
@@ -35,16 +42,16 @@ class PrctlTest(unittest.TestCase):
 
     def test_constants(self):
         """Test whether copying of constants works"""
-        self.assertEquals(prctl.ENDIAN_LITTLE, _prctl.PR_ENDIAN_LITTLE)
-        self.assertEquals(prctl.SECBIT_NOROOT, _prctl.SECBIT_NOROOT)
-        self.assertEquals(prctl.CAP_SYS_ADMIN, _prctl.CAP_SYS_ADMIN)
+        self.assertEqual(prctl.ENDIAN_LITTLE, _prctl.PR_ENDIAN_LITTLE)
+        self.assertEqual(prctl.SECBIT_NOROOT, _prctl.SECBIT_NOROOT)
+        self.assertEqual(prctl.CAP_SYS_ADMIN, _prctl.CAP_SYS_ADMIN)
         self.assertRaises(AttributeError, getattr, prctl, 'PR_ENDIAN_LITTLE')
         self.assertRaises(AttributeError, getattr, prctl, 'PR_CAPBSET_READ')
         self.assertRaises(AttributeError, getattr, prctl, 'CAPBSET_READ')
 
     def test_capbset(self):
         """Test the get_capbset/set_capbset functions"""
-        self.assertEquals(prctl.capbset_read(prctl.CAP_FOWNER), True)
+        self.assertEqual(prctl.capbset_read(prctl.CAP_FOWNER), True)
         if self.am_root:
             self.assertEqual(prctl.capbset_drop(prctl.CAP_FOWNER), None)
             self.assertEqual(prctl.capbset_read(prctl.CAP_FOWNER), False)
@@ -151,17 +158,17 @@ class PrctlTest(unittest.TestCase):
         self.assertEqual(prctl.get_name(), name[:15])
 
     def test_proctitle(self):
-        """Test setting the prcess title, including too long titles"""
+        """Test setting the process title, including too long titles"""
         title = "This is a test!"
         prctl.set_proctitle(title)
         ps_output = subprocess.Popen(['ps', '-f', '-p', '%d' % os.getpid()],
-                                     stdout=subprocess.PIPE).communicate()[0]
+                                     stdout=subprocess.PIPE).communicate()[0].decode('ascii')
         self.assertTrue(ps_output.strip().endswith(title))
         # This should not segfault but truncate
-        title2 = "And this is a test too!"
+        title2 = "And this is a test too! Don't segfault."
         prctl.set_proctitle(title2)
         ps_output = subprocess.Popen(['ps', '-f', '-p', '%d' % os.getpid()],
-                                     stdout=subprocess.PIPE).communicate()[0]
+                                     stdout=subprocess.PIPE).communicate()[0].decode('ascii')
         self.assertTrue(ps_output.strip().endswith(title2[:len(title)]))
 
     def test_pdeathsig(self):
@@ -173,12 +180,11 @@ class PrctlTest(unittest.TestCase):
 
     def test_ptracer(self):
         """Test manipulation of the ptracer setting"""
-        if not hasattr(prctl, 'set_ptracer'):
+        if not hasattr(prctl, 'set_ptracer') or not os.path.exists('/proc/sys/kernel/yama'):
             return
         self.assertEqual(prctl.get_ptracer(), os.getppid())
         prctl.set_ptracer(1)
         self.assertEqual(prctl.get_ptracer(), 1)
-        self.assertRaises(OSError, prctl.set_ptracer, -1)
         new_pid = os.fork()
         if new_pid:
             os.waitpid(new_pid, 0)
@@ -240,17 +246,17 @@ class PrctlTest(unittest.TestCase):
     def test_timing(self):
         """Test manipulation of the timing setting"""
         self.assertRaises(OSError, prctl.set_timing, prctl.TIMING_TIMESTAMP);
-        self.assertEquals(prctl.get_timing(), prctl.TIMING_STATISTICAL)
+        self.assertEqual(prctl.get_timing(), prctl.TIMING_STATISTICAL)
         prctl.set_timing(prctl.TIMING_STATISTICAL)
-        self.assertEquals(prctl.get_timing(), prctl.TIMING_STATISTICAL)
+        self.assertEqual(prctl.get_timing(), prctl.TIMING_STATISTICAL)
 
     def test_tsc(self):
         """Test manipulation of the timestamp counter flag"""
         if re.match('i.86', self.arch):
             prctl.set_tsc(prctl.TSC_SIGSEGV)
-            self.assertEquals(prctl.get_tsc(), prctl.TSC_SIGSEGV)
+            self.assertEqual(prctl.get_tsc(), prctl.TSC_SIGSEGV)
             prctl.set_tsc(prctl.TSC_ENABLE)
-            self.assertEquals(prctl.get_tsc(), prctl.TSC_ENABLE)
+            self.assertEqual(prctl.get_tsc(), prctl.TSC_ENABLE)
         else:
             # FIXME untested
             self.assertRaises(OSError, prctl.get_tsc)
@@ -261,21 +267,21 @@ class PrctlTest(unittest.TestCase):
         if self.arch in ('ia64', 'parisc', 'powerpc', 'alpha'):
             # FIXME untested
             prctl.set_unalign(prctl.UNALIGN_NOPRINT)
-            self.assertEquals(prctl.get_unalign(), prctl.UNALIGN_NOPRINT)
+            self.assertEqual(prctl.get_unalign(), prctl.UNALIGN_NOPRINT)
             prctl.set_unalign(prctl.UNALIGN_SIGBUS)
-            self.assertEquals(prctl.get_unalign(), prctl.UNALIGN_SIGBUS)
+            self.assertEqual(prctl.get_unalign(), prctl.UNALIGN_SIGBUS)
         else:
             self.assertRaises(OSError, prctl.get_unalign)
             self.assertRaises(OSError, prctl.set_unalign, prctl.UNALIGN_NOPRINT)
 
     def test_getcaps(self):
         """Test the get_caps function"""
-        self.assertEquals(prctl.get_caps(), {prctl.CAP_EFFECTIVE: {}, prctl.CAP_INHERITABLE: {}, prctl.CAP_PERMITTED: {}})
-        self.assertEquals(prctl.get_caps((prctl.CAP_SYS_ADMIN, prctl.ALL_FLAGS),(prctl.CAP_NET_ADMIN, prctl.CAP_EFFECTIVE)),
+        self.assertEqual(prctl.get_caps(), {prctl.CAP_EFFECTIVE: {}, prctl.CAP_INHERITABLE: {}, prctl.CAP_PERMITTED: {}})
+        self.assertEqual(prctl.get_caps((prctl.CAP_SYS_ADMIN, prctl.ALL_FLAGS),(prctl.CAP_NET_ADMIN, prctl.CAP_EFFECTIVE)),
                           {prctl.CAP_EFFECTIVE: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root},
                            prctl.CAP_INHERITABLE: {prctl.CAP_SYS_ADMIN: False},
                            prctl.CAP_PERMITTED: {prctl.CAP_SYS_ADMIN: self.am_root}})
-        self.assertEquals(prctl.get_caps(([prctl.CAP_SYS_ADMIN,prctl.CAP_NET_ADMIN], [prctl.CAP_EFFECTIVE,prctl.CAP_PERMITTED])),
+        self.assertEqual(prctl.get_caps(([prctl.CAP_SYS_ADMIN,prctl.CAP_NET_ADMIN], [prctl.CAP_EFFECTIVE,prctl.CAP_PERMITTED])),
                           {prctl.CAP_EFFECTIVE: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root},
                            prctl.CAP_INHERITABLE: {},
                            prctl.CAP_PERMITTED: {prctl.CAP_SYS_ADMIN: self.am_root, prctl.CAP_NET_ADMIN: self.am_root}})
@@ -306,9 +312,12 @@ class PrctlTest(unittest.TestCase):
         for cap in self.capabilities:
             if cap in ('all','effective','permitted','inheritable','setuid'):
                 continue
-            self.assertEquals(getattr(prctl.cap_effective, cap), self.am_root)
-            self.assertEquals(getattr(prctl.cap_permitted, cap), self.am_root)
-            self.assertEquals(getattr(prctl.cap_inheritable, cap), False)
+            # This one now triggers EINVAL
+            if cap == 'wake_alarm':
+                continue
+            self.assertEqual(getattr(prctl.cap_effective, cap), self.am_root)
+            self.assertEqual(getattr(prctl.cap_permitted, cap), self.am_root)
+            self.assertEqual(getattr(prctl.cap_inheritable, cap), False)
         for cap in ['dac_override','mac_override','net_raw']:
             if self.am_root:
                 setattr(prctl.cap_effective, cap, False)

@@ -5,6 +5,11 @@
  */
 
 #include <Python.h>
+#if PY_MAJOR_VERSION >= 3
+#define PyInt_FromLong PyLong_FromLong
+#define PyInt_Check PyLong_Check
+#define PyInt_AsLong PyLong_AsLong
+#endif
 #include "securebits.h"
 #include <sys/capability.h>
 #include <sys/prctl.h>
@@ -12,7 +17,7 @@
 
 /* New in 2.6.32, but named and implemented inconsistently. The linux
  * implementation has two ways of setting the policy to the default, and thus
- * needs an extra argument. We ignore the first argument and always all
+ * needs an extra argument. We ignore the first argument and always call
  * PR_MCE_KILL_SET. This makes our implementation simpler and keeps the prctl
  * interface more consistent
  */
@@ -33,7 +38,11 @@ static int __cached_ptracer = NOT_SET;
 #endif
 
 /* This function is not in Python.h, so define it here */
+#if PY_MAJOR_VERSION < 3
 void Py_GetArgcArgv(int*, char***);
+#else
+void Py_GetArgcArgv(int*, wchar_t***);
+#endif
 
 /* The prctl wrapper */
 static PyObject *
@@ -248,7 +257,7 @@ prctl_prctl(PyObject *self, PyObject *args)
                 return NULL;
             }
             if(option == PR_GET_NAME) {
-                return PyString_FromString(name);
+                return Py_BuildValue("s", name);
             }
             break;
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER == NOT_SET)
@@ -276,17 +285,103 @@ prctl_prctl(PyObject *self, PyObject *args)
 }
 
 /* While not part of prctl, this complements PR_SET_NAME */
+static int __real_argc = -1;
+static char **__real_argv = NULL;
+#if PY_MAJOR_VERSION < 3
+#define _Py_GetArgcArgv Py_GetArgcArgv
+#else
+/* In python 3, Py_GetArgcArgv doesn't actually return the real argv, but an
+ * encoded copy of it. We try to find the real one by going back from the start
+ * of environ.
+ */
+static char * encode(wchar_t *wstr) {
+    PyObject *unicodestr = NULL, *bytesstr = NULL;
+    char *str = NULL;
+
+    unicodestr = PyUnicode_FromWideChar(wstr, -1);
+    if(!unicodestr) {
+        PyErr_Clear();
+        return NULL;
+    }
+
+    bytesstr =  PyUnicode_AsEncodedString(unicodestr, PyUnicode_GetDefaultEncoding(), "strict");
+    if(!bytesstr) {
+        PyErr_Clear();
+        Py_XDECREF(unicodestr);
+        return NULL;
+    }
+
+    str = PyBytes_AsString(bytesstr);
+    Py_XDECREF(unicodestr);
+    Py_XDECREF(bytesstr);
+    return str;
+}
+
+static int _Py_GetArgcArgv(int* argc, char ***argv) {
+    int i = 0;
+    wchar_t **argv_w;
+    char **buf = NULL , *arg0 = NULL, *ptr = 0, *limit = NULL;
+
+    Py_GetArgcArgv(argc, &argv_w);
+
+    buf = (char **)malloc((*argc + 1) * sizeof(char *));
+    buf[*argc] = NULL;
+
+    /* Walk back from environ until you find argc-1 null-terminated strings. */
+    ptr = environ[0] - 1;
+    limit = ptr - 8192;
+    for(i=*argc-1; i >= 1; --i) {
+        ptr--;
+        while (*ptr && ptr-- > limit);
+        if (ptr <= limit) {
+            free(buf);
+            return 0;
+        }
+        buf[i] = (ptr + 1);
+    }
+
+    /* Now try to find argv[0] */
+    arg0 = encode(argv_w[0]);
+    if(!arg0) {
+        free(buf);
+        return 0;
+    }
+    ptr -= strlen(arg0);
+    if(strcmp(ptr, arg0)) {
+        free(buf);
+        return 0;
+    }
+
+    buf[0] = ptr;
+    *argv = buf;
+    return 1;
+}
+#endif
+
 static PyObject *
 prctl_set_proctitle(PyObject *self, PyObject *args)
 {
-    int argc;
+    int argc = 0;
     char **argv;
     int len;
     char *title;
     if(!PyArg_ParseTuple(args, "s", &title)) {
         return NULL;
     }
-    Py_GetArgcArgv(&argc, &argv);
+    if(__real_argc > 0)  {
+        argc = __real_argc;
+        argv = __real_argv;
+    }
+    else {
+        _Py_GetArgcArgv(&argc, &argv);
+        __real_argc = argc;
+        __real_argv = argv;
+    }
+
+    if(argc <= 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to locate argc/argv");
+        return NULL;
+    }
     /* Determine up to where we can write */
     len = (int)(argv[argc-1]) + strlen(argv[argc-1]) - (int)(argv[0]);
     strncpy(argv[0], title, len);
@@ -453,7 +548,7 @@ static PyObject * prctl_cap_to_name(PyObject *self, PyObject *args) {
         PyErr_SetFromErrno(PyExc_OSError);
         return NULL;
     }
-    ret = PyString_FromString(name+4); /* Exclude the cap_ prefix */
+    ret = Py_BuildValue("s", name+4); /* Exclude the cap_ prefix */
     cap_free(name);
     return ret;
 }
@@ -467,6 +562,16 @@ static PyMethodDef PrctlMethods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef prctlmodule = {
+    PyModuleDef_HEAD_INIT,
+    "_prctl",
+    NULL,
+    -1,
+    PrctlMethods
+};
+#endif
+
 /* These macros avoid tediously repeating a name 2 or 4 times */
 #define namedconstant(x) PyModule_AddIntConstant(_prctl, #x, x)
 #define namedattribute(x) do{ \
@@ -475,9 +580,17 @@ static PyMethodDef PrctlMethods[] = {
 } while(0)
 
 PyMODINIT_FUNC
+#if PY_MAJOR_VERSION < 3
 init_prctl(void)
+#else
+PyInit__prctl(void)
+#endif
 {
+#if PY_MAJOR_VERSION < 3
     PyObject *_prctl = Py_InitModule("_prctl", PrctlMethods);
+#else
+    PyObject *_prctl = PyModule_Create(&prctlmodule);
+#endif
     /* Add the PR_* constants */
     namedconstant(PR_CAPBSET_READ);
     namedconstant(PR_CAPBSET_DROP);
@@ -583,4 +696,7 @@ init_prctl(void)
     namedconstant(SECBIT_KEEP_CAPS_LOCKED);
     namedconstant(SECBIT_NO_SETUID_FIXUP_LOCKED);
     namedconstant(SECBIT_NOROOT_LOCKED);
+#if PY_MAJOR_VERSION >= 3
+    return _prctl;
+#endif
 }

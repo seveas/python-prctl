@@ -5,6 +5,10 @@
 import _prctl # The C interface
 import sys
 
+# Python 3.x compatibility
+if sys.version_info[0] >= 3:
+    basestring = str
+
 # Code generation functions
 def prctl_wrapper(option):
     def call_prctl(arg=0):
