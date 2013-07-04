@@ -1,4 +1,4 @@
-Name:           python-prctl
+Name:           python26-prctl
 Version:        1.5.0
 Release:	1
 Summary:        Python interface to prctl system library
