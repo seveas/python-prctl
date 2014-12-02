@@ -385,7 +385,7 @@ prctl_set_proctitle(PyObject *self, PyObject *args)
     /* Determine up to where we can write */
     len = (int)(argv[argc-1]) + strlen(argv[argc-1]) - (int)(argv[0]);
     strncpy(argv[0], title, len);
-    memset(argv[0] + strlen(title), 0, len);
+    memset(argv[0] + strlen(title), 0, len - strlen(title));
     Py_RETURN_NONE;
 }
 
