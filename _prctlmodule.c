@@ -172,6 +172,15 @@ prctl_prctl(PyObject *self, PyObject *args)
                 return NULL;
             }
             break;
+#ifdef PR_SET_NO_NEW_PRIVS
+        case(PR_SET_NO_NEW_PRIVS):
+            if(!arg) {
+                PyErr_SetString(PyExc_ValueError, "Argument must be 1");
+                return NULL;
+            }
+            arg = 1;
+            break;
+#endif
     }
     /*
      * Calling prctl 
@@ -197,6 +206,12 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_GET_KEEPCAPS):
 #ifdef PR_MCE_KILL
         case(PR_GET_MCE_KILL):
+#endif
+#ifdef PR_GET_NO_NEW_PRIVS
+        case(PR_SET_NO_NEW_PRIVS):
+#endif
+#ifdef PR_GET_NO_NEW_PRIVS
+        case(PR_GET_NO_NEW_PRIVS):
 #endif
         case(PR_SET_PDEATHSIG):
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
@@ -241,6 +256,10 @@ prctl_prctl(PyObject *self, PyObject *args)
                     return PyBool_FromLong(result);
 #ifdef PR_MCE_KILL
                 case(PR_GET_MCE_KILL):
+#endif
+#ifdef PR_GET_NO_NEW_PRIVS
+                case(PR_GET_NO_NEW_PRIVS):
+                    return PyBool_FromLong(result);
 #endif
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
                 case(PR_GET_PTRACER):
@@ -647,6 +666,9 @@ PyInit__prctl(void)
     namedconstant(PR_MCE_KILL_DEFAULT);
     namedconstant(PR_MCE_KILL_EARLY);
     namedconstant(PR_MCE_KILL_LATE);
+#endif
+#if defined(PR_GET_NO_NEW_PRIVS) && defined(PR_SET_NO_NEW_PRIVS)
+    namedattribute(NO_NEW_PRIVS);
 #endif
     namedattribute(NAME);
     namedattribute(PDEATHSIG);
