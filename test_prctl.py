@@ -252,7 +252,7 @@ class PrctlTest(unittest.TestCase):
 
     def test_tsc(self):
         """Test manipulation of the timestamp counter flag"""
-        if re.match('i.86', self.arch):
+        if re.match('i.86|x86_64', self.arch):
             prctl.set_tsc(prctl.TSC_SIGSEGV)
             self.assertEqual(prctl.get_tsc(), prctl.TSC_SIGSEGV)
             prctl.set_tsc(prctl.TSC_ENABLE)
