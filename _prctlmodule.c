@@ -135,6 +135,9 @@ prctl_prctl(PyObject *self, PyObject *args)
             break;
 #ifdef PR_SET_SECCOMP
         case(PR_SET_SECCOMP):
+#ifdef PR_SET_NO_NEW_PRIVS
+        case(PR_SET_NO_NEW_PRIVS):
+#endif
             if(!arg) {
                 PyErr_SetString(PyExc_ValueError, "Argument must be 1");
                 return NULL;
@@ -201,6 +204,10 @@ prctl_prctl(PyObject *self, PyObject *args)
 #ifdef PR_MCE_KILL
         case(PR_GET_MCE_KILL):
 #endif
+#ifdef PR_GET_NO_NEW_PRIVS
+        case(PR_GET_NO_NEW_PRIVS):
+        case(PR_SET_NO_NEW_PRIVS):
+#endif
         case(PR_SET_PDEATHSIG):
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
         case(PR_GET_PTRACER):
@@ -244,6 +251,9 @@ prctl_prctl(PyObject *self, PyObject *args)
                     return PyBool_FromLong(result);
 #ifdef PR_MCE_KILL
                 case(PR_GET_MCE_KILL):
+#endif
+#ifdef PR_GET_NO_NEW_PRIVS
+                case(PR_GET_NO_NEW_PRIVS):
 #endif
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
                 case(PR_GET_PTRACER):
@@ -665,6 +675,9 @@ PyInit__prctl(void)
 #endif
 #ifdef PR_SET_CHILD_SUBREAPER
     namedattribute(CHILD_SUBREAPER);
+#endif
+#ifdef PR_SET_NO_NEW_PRIVS
+    namedattribute(NO_NEW_PRIVS);
 #endif
 
 #ifdef PR_GET_SECCOMP

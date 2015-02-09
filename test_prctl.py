@@ -163,6 +163,21 @@ class PrctlTest(unittest.TestCase):
         prctl.set_name(name)
         self.assertEqual(prctl.get_name(), name[:15])
 
+    def test_no_new_privs(self):
+        """Test the no_new_privs function"""
+        self.assertEqual(prctl.get_no_new_privs(), 0)
+        pid = os.fork()
+        if pid:
+            self.assertEqual(os.waitpid(pid, 0)[1], 0)
+        else:
+            prctl.set_no_new_privs(1)
+            self.assertEqual(prctl.get_no_new_privs(), 1)
+            if os.geteuid() != 0:
+                sp = subprocess.Popen(['ping', '-c1', 'localhost'], stderr=subprocess.PIPE)
+                sp.communicate()
+                self.assertNotEqual(sp.returncode, 0)
+            os._exit(0)
+
     def test_proctitle(self):
         """Test setting the process title, including too long titles"""
         title = "This is a test!"

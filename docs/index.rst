@@ -186,6 +186,19 @@ The prctl module is now ready to use.
 
   Return the (first 16 bytes of) the name for the calling process.
 
+.. function:: set_no_new_privs()
+
+  Once this is set, no operation that can grant new privileges (such as
+  execve'ing a setuid binary) will actually grant new privileges.
+
+  This is only available in linux 3.5 and newer
+
+.. function:: get_no_new_privs()
+
+  Get whether new privileges can be granted to this pid.
+
+  This is only available in linux 3.5 and newer
+
 .. function:: set_proctitle(title)
 
   Set the process name for the calling process by overwriting the C-level
