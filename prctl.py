@@ -33,7 +33,7 @@ def cap_wrapper(cap):
 
 def sec_wrapper(bit):
     def getter(self):
-        return bool(_prctl.prctl(_prctl.PR_GET_SECUREBITS) & (1 << bit))
+        return bool(_prctl.prctl(_prctl.PR_GET_SECUREBITS) & bit)
     def setter(self, value):
         bits = _prctl.prctl(_prctl.PR_GET_SECUREBITS)
         if value:
