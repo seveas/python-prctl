@@ -72,10 +72,10 @@ The prctl module is now ready to use.
 .. function:: set_endian(endiannes)
 
   Set the endian-ness of the calling process. Valid values are
-  :const:`~prctl.ENDIAN_BIG`, :const:`~prctl.ENDIAN_LITTLE` and 
+  :const:`~prctl.ENDIAN_BIG`, :const:`~prctl.ENDIAN_LITTLE` and
   :const:`~prctl.ENDIAN_PPC_LITTLE` (PowerPC pseudo little endian).
 
-  .. note:: 
+  .. note::
 
     This function only works on PowerPC systems. An :exc:`OSError` is raised
     when called on other systems.
@@ -90,7 +90,7 @@ The prctl module is now ready to use.
   to silently emulate fp operations accesses, or :const:`~prctl.FPEMU_SIGFPE`
   to not emulate fp operations and send :const:`~signal.SIGFPE` instead.
 
-  .. note:: 
+  .. note::
 
     This function only works on ia64 systems. An :exc:`OSError` is raised
     when called on other systems.
@@ -111,7 +111,7 @@ The prctl module is now ready to use.
   recoverable exception mode, :const:`FP_EXC_PRECISE` for precise exception
   mode. Modes can be combined with the :const:`|` operator.
 
-  .. note:: 
+  .. note::
 
     This function only works on PowerPC systems. An :exc:`OSError` is raised
     when called on other systems.
@@ -272,7 +272,7 @@ The prctl module is now ready to use.
   or :const:`~prctl.TSC_SIGSEGV` to generate a :const:`SIGSEGV` when the
   process tries to read the timestamp counter.
 
-  .. note:: 
+  .. note::
 
     This function only works on x86 systems. An :exc:`OSError` is raised when
     called on other systems.
@@ -286,9 +286,9 @@ The prctl module is now ready to use.
 
   Set unaligned access control flag. Pass :const:`~prctl.UNALIGN_NOPRINT` to
   silently fix up unaligned user accesses, or :const:`~prctl.UNALIGN_SIGBUS` to
-  generate :const:`SIGBUS` on unaligned user access.  
+  generate :const:`SIGBUS` on unaligned user access.
 
-  .. note:: 
+  .. note::
 
     This function only works on ia64, parisc, PowerPC and Alpha systems. An
     :exc:`OSError` is raised when called on other systems.
@@ -298,19 +298,19 @@ The prctl module is now ready to use.
   Return unaligned access control bits, see :func:`set_unalign`.
 
 .. function:: set_securebits(bitmap)
-  
-  Set the "securebits" flags of the calling thread. 
 
-  .. note:: 
+  Set the "securebits" flags of the calling thread.
+
+  .. note::
 
     It is not recommended to use this function directly, use the
     :attr:`~prctl.securebits` object instead.
 
 .. function:: get_securebits()
-  
-  Get the "securebits" flags of the calling thread. 
 
-  .. note:: 
+  Get the "securebits" flags of the calling thread.
+
+  .. note::
 
     As with :func:`set_securebits`, it is not recommended to use this function
     directly, use the :attr:`~prctl.securebits` object instead.
@@ -323,7 +323,7 @@ The prctl module is now ready to use.
   subsequent call to :func:`execve`. An :exc:`OSError` will be raised when an
   invalid capability is specified.
 
-  .. note:: 
+  .. note::
 
     It is not recommended to use this function directly, use the
     :attr:`~prctl.capbset` object instead.
@@ -339,7 +339,7 @@ The prctl module is now ready to use.
   :const:`~prctl.CAP_SETPCAP` capability or when the specified capability is
   invalid or when capabilities are not enabled in the kernel.
 
-  .. note:: 
+  .. note::
 
     As with :func:`capbset_read`, it is not recommended to use this function
     directly, use the :attr:`~prctl.capbset` object instead.

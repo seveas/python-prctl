@@ -105,7 +105,7 @@ class PrctlTest(unittest.TestCase):
         else:
             self.assertRaises(OSError, prctl.get_endian)
             self.assertRaises(OSError, prctl.set_endian)
-    
+
     def test_fpemu(self):
         """Test manipulation of the fpemu setting"""
         if self.arch == 'ia64':
@@ -216,7 +216,7 @@ class PrctlTest(unittest.TestCase):
             self.assertEqual(prctl.get_securebits(), prctl.SECBIT_KEEP_CAPS)
         else:
             self.assertRaises(OSError, prctl.set_securebits, prctl.SECBIT_KEEP_CAPS)
-    
+
     def test_securebits_obj(self):
         """Test manipulation of the securebits via the securebits object"""
         self.assertEqual(prctl.securebits.noroot, False)

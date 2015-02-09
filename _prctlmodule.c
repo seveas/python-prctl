@@ -54,7 +54,7 @@ prctl_prctl(PyObject *self, PyObject *args)
     char name[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
     int result;
 
-    /* 
+    /*
      * Accept single int, two ints and int+string. That covers all current
      * prctl possibilities. int+string is required for (and only accepted for)
      * PR_SET_NAME
@@ -106,8 +106,8 @@ prctl_prctl(PyObject *self, PyObject *args)
             break;
         case(PR_SET_FPEXC):
             if(arg & ~(PR_FP_EXC_SW_ENABLE | PR_FP_EXC_DIV | PR_FP_EXC_OVF |
-                       PR_FP_EXC_UND | PR_FP_EXC_RES | PR_FP_EXC_INV | 
-                       PR_FP_EXC_DISABLED | PR_FP_EXC_NONRECOV | 
+                       PR_FP_EXC_UND | PR_FP_EXC_RES | PR_FP_EXC_INV |
+                       PR_FP_EXC_DISABLED | PR_FP_EXC_NONRECOV |
                        PR_FP_EXC_ASYNC | PR_FP_EXC_PRECISE)) {
                 PyErr_SetString(PyExc_ValueError, "Unknown floating-point exception mode");
                 return NULL;
@@ -144,7 +144,7 @@ prctl_prctl(PyObject *self, PyObject *args)
 #endif
 #ifdef PR_SET_SECUREBITS
         case(PR_SET_SECUREBITS):
-            if(arg & ~ ((1 << SECURE_NOROOT) | (1 << SECURE_NOROOT_LOCKED) | 
+            if(arg & ~ ((1 << SECURE_NOROOT) | (1 << SECURE_NOROOT_LOCKED) |
                         (1 << SECURE_NO_SETUID_FIXUP) | (1 << SECURE_NO_SETUID_FIXUP_LOCKED) |
                         (1 << SECURE_KEEP_CAPS) | (1 << SECURE_KEEP_CAPS_LOCKED))) {
                 PyErr_SetString(PyExc_ValueError, "Invalid securebits set");
@@ -174,7 +174,7 @@ prctl_prctl(PyObject *self, PyObject *args)
             break;
     }
     /*
-     * Calling prctl 
+     * Calling prctl
      * There are 3 basic call modes:
      * - Setters and getters for which the return value is the result
      * - Getters for which the result is placed in arg2
@@ -556,7 +556,7 @@ static PyObject * prctl_set_caps(PyObject *self, PyObject *args)
         PyErr_SetFromErrno(PyExc_OSError);
         return NULL;
     }
-    
+
     Py_RETURN_NONE;
 }
 

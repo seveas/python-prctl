@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ---------------------------------------------------------------------
 
-The documentation is heavily based on the linux manpages prctl and 
+The documentation is heavily based on the linux manpages prctl and
 capabilities, which is covered by the following license:
 
 Permission is granted to make and distribute verbatim copies of this
