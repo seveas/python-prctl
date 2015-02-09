@@ -25,7 +25,7 @@ builddir = os.path.join(curdir, 'build', 'lib.%s-%s' % (distutils.util.get_platf
 if not os.path.exists(builddir) or \
    not os.path.exists(os.path.join(builddir, 'prctl.py')) or \
    not os.path.exists(os.path.join(builddir, '_prctl' + so)) or \
-   os.path.getmtime(os.path.join(curdir, 'prctl.py')) > os.path.getmtime(os.path.join(builddir, 'prctl.py')) or \
+   int(os.path.getmtime(os.path.join(curdir, 'prctl.py'))) > int(os.path.getmtime(os.path.join(builddir, 'prctl.py'))) or \
    os.path.getmtime(os.path.join(curdir, '_prctlmodule.c')) > os.path.getmtime(os.path.join(builddir, '_prctl' + so)):
      sys.stderr.write("Please build the extension first, using ./setup.py build\n")
      sys.exit(1)
