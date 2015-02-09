@@ -1,6 +1,6 @@
 /*
  * python-pctrl -- python interface to the prctl function
- * (c)2010 Dennis Kaarsemaker <dennis@kaarsemaker.net
+ * (c)2010-2015 Dennis Kaarsemaker <dennis@kaarsemaker.net
  * See COPYING for licensing details
  */
 
@@ -54,7 +54,7 @@ prctl_prctl(PyObject *self, PyObject *args)
     char name[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
     int result;
 
-    /* 
+    /*
      * Accept single int, two ints and int+string. That covers all current
      * prctl possibilities. int+string is required for (and only accepted for)
      * PR_SET_NAME
@@ -78,6 +78,7 @@ prctl_prctl(PyObject *self, PyObject *args)
 
     /* Validate the optional arguments */
     switch(option) {
+#ifdef PR_CAPBSET_READ
         case(PR_CAPBSET_READ):
         case(PR_CAPBSET_DROP):
             if(!cap_valid(arg)) {
@@ -85,6 +86,7 @@ prctl_prctl(PyObject *self, PyObject *args)
                 return NULL;
             }
             break;
+#endif
         case(PR_SET_DUMPABLE):
         case(PR_SET_KEEPCAPS):
             /* Only 0 and 1 are allowed */
@@ -104,8 +106,8 @@ prctl_prctl(PyObject *self, PyObject *args)
             break;
         case(PR_SET_FPEXC):
             if(arg & ~(PR_FP_EXC_SW_ENABLE | PR_FP_EXC_DIV | PR_FP_EXC_OVF |
-                       PR_FP_EXC_UND | PR_FP_EXC_RES | PR_FP_EXC_INV | 
-                       PR_FP_EXC_DISABLED | PR_FP_EXC_NONRECOV | 
+                       PR_FP_EXC_UND | PR_FP_EXC_RES | PR_FP_EXC_INV |
+                       PR_FP_EXC_DISABLED | PR_FP_EXC_NONRECOV |
                        PR_FP_EXC_ASYNC | PR_FP_EXC_PRECISE)) {
                 PyErr_SetString(PyExc_ValueError, "Unknown floating-point exception mode");
                 return NULL;
@@ -131,33 +133,42 @@ prctl_prctl(PyObject *self, PyObject *args)
                 return NULL;
             }
             break;
+#ifdef PR_SET_SECCOMP
         case(PR_SET_SECCOMP):
+#ifdef PR_SET_NO_NEW_PRIVS
+        case(PR_SET_NO_NEW_PRIVS):
+#endif
             if(!arg) {
                 PyErr_SetString(PyExc_ValueError, "Argument must be 1");
                 return NULL;
             }
             arg = 1;
             break;
+#endif
+#ifdef PR_SET_SECUREBITS
         case(PR_SET_SECUREBITS):
-            if(arg & ~ ((1 << SECURE_NOROOT) | (1 << SECURE_NOROOT_LOCKED) | 
+            if(arg & ~ ((1 << SECURE_NOROOT) | (1 << SECURE_NOROOT_LOCKED) |
                         (1 << SECURE_NO_SETUID_FIXUP) | (1 << SECURE_NO_SETUID_FIXUP_LOCKED) |
                         (1 << SECURE_KEEP_CAPS) | (1 << SECURE_KEEP_CAPS_LOCKED))) {
                 PyErr_SetString(PyExc_ValueError, "Invalid securebits set");
                 return NULL;
             }
             break;
+#endif
         case(PR_SET_TIMING):
             if(arg != PR_TIMING_STATISTICAL && arg != PR_TIMING_TIMESTAMP) {
                 PyErr_SetString(PyExc_ValueError, "Invalid timing constant");
                 return NULL;
             }
             break;
+#ifdef PR_SET_TSC
         case(PR_SET_TSC):
             if(arg != PR_TSC_ENABLE && arg != PR_TSC_SIGSEGV) {
                 PyErr_SetString(PyExc_ValueError, "Invalid TSC setting");
                 return NULL;
             }
             break;
+#endif
         case(PR_SET_UNALIGN):
             if(arg != PR_UNALIGN_NOPRINT && arg != PR_UNALIGN_SIGBUS) {
                 PyErr_SetString(PyExc_ValueError, "Invalid TSC setting");
@@ -166,7 +177,7 @@ prctl_prctl(PyObject *self, PyObject *args)
             break;
     }
     /*
-     * Calling prctl 
+     * Calling prctl
      * There are 3 basic call modes:
      * - Setters and getters for which the return value is the result
      * - Getters for which the result is placed in arg2
@@ -176,8 +187,13 @@ prctl_prctl(PyObject *self, PyObject *args)
      * settings or the result of a getter call as a PyInt or PyString.
      */
     switch(option) {
+#ifdef PR_CAPBSET_READ
         case(PR_CAPBSET_READ):
         case(PR_CAPBSET_DROP):
+#endif
+#ifdef PR_SET_CHILD_SUBREAPER
+        case(PR_SET_CHILD_SUBREAPER):
+#endif
         case(PR_SET_DUMPABLE):
         case(PR_GET_DUMPABLE):
         case(PR_SET_ENDIAN):
@@ -188,6 +204,10 @@ prctl_prctl(PyObject *self, PyObject *args)
 #ifdef PR_MCE_KILL
         case(PR_GET_MCE_KILL):
 #endif
+#ifdef PR_GET_NO_NEW_PRIVS
+        case(PR_GET_NO_NEW_PRIVS):
+        case(PR_SET_NO_NEW_PRIVS):
+#endif
         case(PR_SET_PDEATHSIG):
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
         case(PR_GET_PTRACER):
@@ -195,17 +215,23 @@ prctl_prctl(PyObject *self, PyObject *args)
 #ifdef PR_SET_PTRACER
         case(PR_SET_PTRACER):
 #endif
+#ifdef PR_SET_SECCOMP
         case(PR_SET_SECCOMP):
         case(PR_GET_SECCOMP):
+#endif
+#ifdef PR_SET_SECUREBITS
         case(PR_SET_SECUREBITS):
         case(PR_GET_SECUREBITS):
+#endif
 #ifdef PR_GET_TIMERSLACK
         case(PR_GET_TIMERSLACK):
         case(PR_SET_TIMERSLACK):
 #endif
         case(PR_SET_TIMING):
         case(PR_GET_TIMING):
+#ifdef PR_SET_TSC
         case(PR_SET_TSC):
+#endif
         case(PR_SET_UNALIGN):
             result = prctl(option, arg, 0, 0, 0);
             if(result < 0) {
@@ -213,19 +239,28 @@ prctl_prctl(PyObject *self, PyObject *args)
                 return NULL;
             }
             switch(option) {
+#ifdef PR_CAPBSET_READ
                 case(PR_CAPBSET_READ):
+#endif
                 case(PR_GET_DUMPABLE):
                 case(PR_GET_KEEPCAPS):
+#ifdef PR_GET_SECCOMP
                 case(PR_GET_SECCOMP):
+#endif
                 case(PR_GET_TIMING):
                     return PyBool_FromLong(result);
 #ifdef PR_MCE_KILL
                 case(PR_GET_MCE_KILL):
 #endif
+#ifdef PR_GET_NO_NEW_PRIVS
+                case(PR_GET_NO_NEW_PRIVS):
+#endif
 #if defined(PR_GET_PTRACER) && (PR_GET_PTRACER != NOT_SET)
                 case(PR_GET_PTRACER):
 #endif
+#ifdef PR_GET_SECUREBITS
                 case(PR_GET_SECUREBITS):
+#endif
 #ifdef PR_GET_TIMERSLACK
                 case(PR_GET_TIMERSLACK):
 #endif
@@ -237,11 +272,16 @@ prctl_prctl(PyObject *self, PyObject *args)
 #endif
             }
             break;
+#ifdef PR_GET_CHILD_SUBREAPER
+        case(PR_GET_CHILD_SUBREAPER):
+#endif
         case(PR_GET_ENDIAN):
         case(PR_GET_FPEMU):
         case(PR_GET_FPEXC):
         case(PR_GET_PDEATHSIG):
+#ifdef PR_GET_TSC
         case(PR_GET_TSC):
+#endif
         case(PR_GET_UNALIGN):
             result = prctl(option, &arg, 0, 0, 0);
             if(result < 0) {
@@ -383,9 +423,10 @@ prctl_set_proctitle(PyObject *self, PyObject *args)
         return NULL;
     }
     /* Determine up to where we can write */
-    len = (int)(argv[argc-1]) + strlen(argv[argc-1]) - (int)(argv[0]);
+    len = (size_t)(argv[argc-1]) + strlen(argv[argc-1]) - (size_t)(argv[0]);
     strncpy(argv[0], title, len);
-    memset(argv[0] + strlen(title), 0, len);
+    if(strlen(title) < len)
+        memset(argv[0] + strlen(title), 0, len - strlen(title));
     Py_RETURN_NONE;
 }
 
@@ -531,9 +572,11 @@ static PyObject * prctl_set_caps(PyObject *self, PyObject *args)
         PyErr_SetFromErrno(PyExc_OSError);
         return NULL;
     }
-    
+
     Py_RETURN_NONE;
 }
+
+extern char * cap_to_name( cap_value_t);
 
 static PyObject * prctl_cap_to_name(PyObject *self, PyObject *args) {
     cap_value_t cap;
@@ -592,8 +635,10 @@ PyInit__prctl(void)
     PyObject *_prctl = PyModule_Create(&prctlmodule);
 #endif
     /* Add the PR_* constants */
+#ifdef PR_CAPBSET_READ
     namedconstant(PR_CAPBSET_READ);
     namedconstant(PR_CAPBSET_DROP);
+#endif
     namedattribute(DUMPABLE);
     namedattribute(ENDIAN);
     namedconstant(PR_ENDIAN_BIG);
@@ -625,17 +670,33 @@ PyInit__prctl(void)
 #ifdef PR_SET_PTRACER
     namedattribute(PTRACER);
 #endif
+#ifdef PR_SET_PTRACER_ANY
+    namedconstant(PR_SET_PTRACER_ANY);
+#endif
+#ifdef PR_SET_CHILD_SUBREAPER
+    namedattribute(CHILD_SUBREAPER);
+#endif
+#ifdef PR_SET_NO_NEW_PRIVS
+    namedattribute(NO_NEW_PRIVS);
+#endif
+
+#ifdef PR_GET_SECCOMP
     namedattribute(SECCOMP);
+#endif
+#ifdef PR_GET_SECUREBITS
     namedattribute(SECUREBITS);
+#endif
 #ifdef PR_GET_TIMERSLACK
     namedattribute(TIMERSLACK);
 #endif
     namedattribute(TIMING);
     namedconstant(PR_TIMING_STATISTICAL);
     namedconstant(PR_TIMING_TIMESTAMP);
+#ifdef PR_SET_TSC
     namedattribute(TSC);
     namedconstant(PR_TSC_ENABLE);
     namedconstant(PR_TSC_SIGSEGV);
+#endif
     namedattribute(UNALIGN);
     namedconstant(PR_UNALIGN_NOPRINT);
     namedconstant(PR_UNALIGN_SIGBUS);
@@ -674,9 +735,15 @@ PyInit__prctl(void)
     namedconstant(CAP_LEASE);
     namedconstant(CAP_AUDIT_WRITE);
     namedconstant(CAP_AUDIT_CONTROL);
+#ifdef CAP_SETFCAP
     namedconstant(CAP_SETFCAP);
+#endif
+#ifdef CAP_MAC_OVERRIDE
     namedconstant(CAP_MAC_OVERRIDE);
+#endif
+#ifdef CAP_MAC_ADMIN
     namedconstant(CAP_MAC_ADMIN);
+#endif
 #ifdef CAP_SYSLOG
     namedconstant(CAP_SYSLOG);
 #endif

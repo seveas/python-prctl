@@ -1,5 +1,5 @@
 # python-pctrl -- python interface to the prctl function
-# (c)2010 Dennis Kaarsemaker <dennis@kaarsemaker.net
+# (c)2010-2015 Dennis Kaarsemaker <dennis@kaarsemaker.net
 # See COPYING for licensing details
 
 import _prctl # The C interface
@@ -33,7 +33,7 @@ def cap_wrapper(cap):
 
 def sec_wrapper(bit):
     def getter(self):
-        return bool(_prctl.prctl(_prctl.PR_GET_SECUREBITS) & (1 << bit))
+        return bool(_prctl.prctl(_prctl.PR_GET_SECUREBITS) & bit)
     def setter(self, value):
         bits = _prctl.prctl(_prctl.PR_GET_SECUREBITS)
         if value:

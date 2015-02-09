@@ -1,5 +1,5 @@
 # python-pctrl -- python interface to the prctl function
-# (c)2010 Dennis Kaarsemaker <dennis@kaarsemaker.net
+# (c)2010-2015 Dennis Kaarsemaker <dennis@kaarsemaker.net
 # See COPYING for licensing details
 
 import distutils.util
@@ -25,7 +25,7 @@ builddir = os.path.join(curdir, 'build', 'lib.%s-%s' % (distutils.util.get_platf
 if not os.path.exists(builddir) or \
    not os.path.exists(os.path.join(builddir, 'prctl.py')) or \
    not os.path.exists(os.path.join(builddir, '_prctl' + so)) or \
-   os.path.getmtime(os.path.join(curdir, 'prctl.py')) > os.path.getmtime(os.path.join(builddir, 'prctl.py')) or \
+   int(os.path.getmtime(os.path.join(curdir, 'prctl.py'))) > int(os.path.getmtime(os.path.join(builddir, 'prctl.py'))) or \
    os.path.getmtime(os.path.join(curdir, '_prctlmodule.c')) > os.path.getmtime(os.path.join(builddir, '_prctl' + so)):
      sys.stderr.write("Please build the extension first, using ./setup.py build\n")
      sys.exit(1)
@@ -85,6 +85,12 @@ class PrctlTest(unittest.TestCase):
             prctl.capbset.foo = 1
         self.assertRaises(AttributeError, unknown_attr)
 
+    def test_child_subreaper(self):
+        self.assertEqual(prctl.get_child_subreaper(), 0)
+        prctl.set_child_subreaper(1)
+        self.assertEqual(prctl.get_child_subreaper(), 1)
+        prctl.set_child_subreaper(0)
+
     def test_dumpable(self):
         """Test manipulation of the dumpable flag"""
         prctl.set_dumpable(True)
@@ -105,7 +111,7 @@ class PrctlTest(unittest.TestCase):
         else:
             self.assertRaises(OSError, prctl.get_endian)
             self.assertRaises(OSError, prctl.set_endian)
-    
+
     def test_fpemu(self):
         """Test manipulation of the fpemu setting"""
         if self.arch == 'ia64':
@@ -156,6 +162,21 @@ class PrctlTest(unittest.TestCase):
         name = prctl.get_name().swapcase() * 16
         prctl.set_name(name)
         self.assertEqual(prctl.get_name(), name[:15])
+
+    def test_no_new_privs(self):
+        """Test the no_new_privs function"""
+        self.assertEqual(prctl.get_no_new_privs(), 0)
+        pid = os.fork()
+        if pid:
+            self.assertEqual(os.waitpid(pid, 0)[1], 0)
+        else:
+            prctl.set_no_new_privs(1)
+            self.assertEqual(prctl.get_no_new_privs(), 1)
+            if os.geteuid() != 0:
+                sp = subprocess.Popen(['ping', '-c1', 'localhost'], stderr=subprocess.PIPE)
+                sp.communicate()
+                self.assertNotEqual(sp.returncode, 0)
+            os._exit(0)
 
     def test_proctitle(self):
         """Test setting the process title, including too long titles"""
@@ -216,7 +237,7 @@ class PrctlTest(unittest.TestCase):
             self.assertEqual(prctl.get_securebits(), prctl.SECBIT_KEEP_CAPS)
         else:
             self.assertRaises(OSError, prctl.set_securebits, prctl.SECBIT_KEEP_CAPS)
-    
+
     def test_securebits_obj(self):
         """Test manipulation of the securebits via the securebits object"""
         self.assertEqual(prctl.securebits.noroot, False)
@@ -252,7 +273,7 @@ class PrctlTest(unittest.TestCase):
 
     def test_tsc(self):
         """Test manipulation of the timestamp counter flag"""
-        if re.match('i.86', self.arch):
+        if re.match('i.86|x86_64', self.arch):
             prctl.set_tsc(prctl.TSC_SIGSEGV)
             self.assertEqual(prctl.get_tsc(), prctl.TSC_SIGSEGV)
             prctl.set_tsc(prctl.TSC_ENABLE)
