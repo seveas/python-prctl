@@ -57,6 +57,22 @@ The prctl module is now ready to use.
    :synopsis: Control process attributes
 .. moduleauthor:: Dennis Kaarsemaker <dennis@kaarsemaker.net>
 
+.. function:: set_child_subreaper(flag)
+
+  When processes double-fork, they get implicitely re-parented to PID 1. Using
+  this function, processes can mark themselves as service manager and will
+  remain parent of any such processes they launch, becoming a sort of sub-init.
+  They will then be responsible for handling :const:`~signal.SIGCHLD` and
+  calling :func:`wait` in them.
+
+  This is only available in linux 3.4 and newer
+
+.. function:: get_child_subreaper()
+
+  Determine whether we are a sub-init.
+
+  This is only available in linux 3.4 and newer
+
 .. function:: set_dumpable(flag)
 
   Set the state of the flag determining whether core dumps are produced for

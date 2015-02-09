@@ -85,6 +85,12 @@ class PrctlTest(unittest.TestCase):
             prctl.capbset.foo = 1
         self.assertRaises(AttributeError, unknown_attr)
 
+    def test_child_subreaper(self):
+        self.assertEqual(prctl.get_child_subreaper(), 0)
+        prctl.set_child_subreaper(1)
+        self.assertEqual(prctl.get_child_subreaper(), 1)
+        prctl.set_child_subreaper(0)
+
     def test_dumpable(self):
         """Test manipulation of the dumpable flag"""
         prctl.set_dumpable(True)

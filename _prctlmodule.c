@@ -188,6 +188,9 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_CAPBSET_READ):
         case(PR_CAPBSET_DROP):
 #endif
+#ifdef PR_SET_CHILD_SUBREAPER
+        case(PR_SET_CHILD_SUBREAPER):
+#endif
         case(PR_SET_DUMPABLE):
         case(PR_GET_DUMPABLE):
         case(PR_SET_ENDIAN):
@@ -259,6 +262,9 @@ prctl_prctl(PyObject *self, PyObject *args)
 #endif
             }
             break;
+#ifdef PR_GET_CHILD_SUBREAPER
+        case(PR_GET_CHILD_SUBREAPER):
+#endif
         case(PR_GET_ENDIAN):
         case(PR_GET_FPEMU):
         case(PR_GET_FPEXC):
@@ -654,6 +660,10 @@ PyInit__prctl(void)
 #ifdef PR_SET_PTRACER
     namedattribute(PTRACER);
 #endif
+#ifdef PR_SET_CHILD_SUBREAPER
+    namedattribute(CHILD_SUBREAPER);
+#endif
+
 #ifdef PR_GET_SECCOMP
     namedattribute(SECCOMP);
 #endif
