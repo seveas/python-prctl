@@ -660,6 +660,9 @@ PyInit__prctl(void)
 #ifdef PR_SET_PTRACER
     namedattribute(PTRACER);
 #endif
+#ifdef PR_SET_PTRACER_ANY
+    namedconstant(PR_SET_PTRACER_ANY);
+#endif
 #ifdef PR_SET_CHILD_SUBREAPER
     namedattribute(CHILD_SUBREAPER);
 #endif
