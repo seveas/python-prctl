@@ -8,8 +8,8 @@ import sys
 
 # Check our environment
 # - Need to be on linux
-# - Need kernel 2.6.26+
-# - Need python 2.5+
+# - Need kernel 2.6.18+
+# - Need python 2.4+
 # - Need gcc
 # - Need C headers
 # - Need libcap headers
@@ -22,8 +22,8 @@ if kvers < '2.6.18' and not os.environ.get("PRCTL_SKIP_KERNEL_CHECK",False):
     sys.stderr.write("This module requires linux 2.6.18 or newer\n")
     sys.exit(1)
 
-if sys.version_info[:2] < (2,5):
-    sys.stderr.write("This module requires python 2.5 or newer\n")
+if sys.version_info[:2] < (2,4):
+    sys.stderr.write("This module requires python 2.4 or newer\n")
     sys.exit(1)
 
 exit = False
