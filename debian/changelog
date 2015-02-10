@@ -1,3 +1,9 @@
+python-prctl (1.6.1-1) utopic; urgency=medium
+
+  * New upstream bugfix release
+
+ -- Dennis Kaarsemaker <dennis@kaarsemaker.net>  Tue, 10 Feb 2015 10:16:31 +0100
+
 python-prctl (1.6.0-1) utopic; urgency=medium
 
   * New upstream release with more prctl's
