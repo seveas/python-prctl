@@ -576,8 +576,7 @@ static PyObject * prctl_set_caps(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-extern char * cap_to_name( cap_value_t);
-
+#ifdef cap_to_name
 static PyObject * prctl_cap_to_name(PyObject *self, PyObject *args) {
     cap_value_t cap;
     char *name;
@@ -595,11 +594,14 @@ static PyObject * prctl_cap_to_name(PyObject *self, PyObject *args) {
     cap_free(name);
     return ret;
 }
+#endif
 
 static PyMethodDef PrctlMethods[] = {
     {"get_caps", prctl_get_caps, METH_VARARGS, "Get process capabilities"},
     {"set_caps", prctl_set_caps, METH_VARARGS, "Set process capabilities"},
+#ifdef cap_to_name
     {"cap_to_name", prctl_cap_to_name, METH_VARARGS, "Convert capability number to name"},
+#endif
     {"prctl", prctl_prctl, METH_VARARGS, "Call prctl"},
     {"set_proctitle", prctl_set_proctitle, METH_VARARGS, "Set the process title"},
     {NULL, NULL, 0, NULL} /* Sentinel */

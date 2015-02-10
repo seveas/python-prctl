@@ -99,7 +99,7 @@ securebits = Securebits()
 # Copy constants from _prctl and generate the functions
 self = sys.modules['prctl']
 for name in dir(_prctl):
-    if name.startswith(('PR_GET','PR_SET','PR_CAPBSET')):
+    if name.startswith('PR_GET') or name.startswith('PR_SET') or name.startswith('PR_CAPBSET'):
         # Generate a function for this option
         val = getattr(_prctl, name)
         friendly_name = name.lower()[3:]
@@ -109,7 +109,7 @@ for name in dir(_prctl):
         # Add the argument constants without PR_ prefix
         setattr(self, name[3:], getattr(_prctl, name))
 
-    elif name.startswith(('CAP_','SECBIT_','SECURE_')):
+    elif name.startswith('CAP_') or name.startswith('SECBIT_') or name.startswith('SECURE_'):
         # Add CAP_*/SECBIT_*/SECURE_* constants verbatim. You shouldn't use them anyway,
         # use the capbset/securebits object
         setattr(self, name, getattr(_prctl, name))
