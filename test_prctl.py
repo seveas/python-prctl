@@ -34,6 +34,13 @@ sys.path.insert(0, builddir)
 import prctl
 import _prctl
 
+def require(attr):
+    def decorator(func):
+        if not hasattr(prctl, attr) and not hasattr(_prctl, attr):
+            return lambda *args, **kwargs: None
+        return func
+    return decorator
+
 class PrctlTest(unittest.TestCase):
     # There are architecture specific tests
     arch = os.uname()[4]
@@ -49,6 +56,7 @@ class PrctlTest(unittest.TestCase):
         self.assertRaises(AttributeError, getattr, prctl, 'PR_CAPBSET_READ')
         self.assertRaises(AttributeError, getattr, prctl, 'CAPBSET_READ')
 
+    @require('PR_CAPBSET_READ')
     def test_capbset(self):
         """Test the get_capbset/set_capbset functions"""
         self.assertEqual(prctl.capbset_read(prctl.CAP_FOWNER), True)
@@ -59,6 +67,7 @@ class PrctlTest(unittest.TestCase):
             self.assertRaises(OSError, prctl.capbset_drop, prctl.CAP_MKNOD)
         self.assertRaises(ValueError, prctl.capbset_read, 999)
 
+    @require('PR_CAPBSET_READ')
     def test_capbset_object(self):
         """Test manipulation of the capability bounding set via the capbset object"""
         self.assertEqual(prctl.capbset.sys_admin, True)
@@ -85,6 +94,7 @@ class PrctlTest(unittest.TestCase):
             prctl.capbset.foo = 1
         self.assertRaises(AttributeError, unknown_attr)
 
+    @require('get_child_subreaper')
     def test_child_subreaper(self):
         self.assertEqual(prctl.get_child_subreaper(), 0)
         prctl.set_child_subreaper(1)
@@ -143,10 +153,9 @@ class PrctlTest(unittest.TestCase):
         prctl.set_keepcaps(False)
         self.assertEqual(prctl.get_keepcaps(), False)
 
+    @require('set_mce_kill')
     def test_mce_kill(self):
         """Test the MCE_KILL setting"""
-        if not hasattr(prctl, 'set_mce_kill'):
-            return
         fd = open('/proc/sys/vm/memory_failure_early_kill')
         current = int(fd.read().strip())
         fd.close()
@@ -163,6 +172,7 @@ class PrctlTest(unittest.TestCase):
         prctl.set_name(name)
         self.assertEqual(prctl.get_name(), name[:15])
 
+    @require('get_no_new_privs')
     def test_no_new_privs(self):
         """Test the no_new_privs function"""
         self.assertEqual(prctl.get_no_new_privs(), 0)
@@ -199,9 +209,10 @@ class PrctlTest(unittest.TestCase):
         prctl.set_pdeathsig(signal.SIGINT)
         self.assertEqual(prctl.get_pdeathsig(), signal.SIGINT)
 
+    @require('set_ptracer')
     def test_ptracer(self):
         """Test manipulation of the ptracer setting"""
-        if not hasattr(prctl, 'set_ptracer') or not os.path.exists('/proc/sys/kernel/yama'):
+        if not os.path.exists('/proc/sys/kernel/yama'):
             return
         self.assertEqual(prctl.get_ptracer(), os.getppid())
         prctl.set_ptracer(1)
@@ -213,6 +224,7 @@ class PrctlTest(unittest.TestCase):
             os._exit(0)
         self.assertRaises(OSError, prctl.set_ptracer, new_pid)
 
+    @require('get_seccomp')
     def test_seccomp(self):
         """Test manipulation of the seccomp setting"""
         self.assertEqual(prctl.get_seccomp(), False)
@@ -229,6 +241,7 @@ class PrctlTest(unittest.TestCase):
             self.assertTrue(os.WIFSIGNALED(result))
             self.assertEqual(os.WTERMSIG(result), signal.SIGKILL)
 
+    @require('PR_GET_SECUREBITS')
     def test_securebits(self):
         """Test manipulation of the securebits flag"""
         self.assertEqual(prctl.get_securebits(), 0)
@@ -238,6 +251,7 @@ class PrctlTest(unittest.TestCase):
         else:
             self.assertRaises(OSError, prctl.set_securebits, prctl.SECBIT_KEEP_CAPS)
 
+    @require('PR_GET_SECUREBITS')
     def test_securebits_obj(self):
         """Test manipulation of the securebits via the securebits object"""
         self.assertEqual(prctl.securebits.noroot, False)
@@ -254,10 +268,9 @@ class PrctlTest(unittest.TestCase):
                 prctl.securebits.noroot = True
             self.assertRaises(OSError, set_true)
 
+    @require('get_timerslack')
     def test_timerslack(self):
         """Test manipulation of the timerslack value"""
-        if not hasattr(prctl, 'get_timerslack'):
-            return
         default = prctl.get_timerslack()
         prctl.set_timerslack(1000)
         self.assertEqual(prctl.get_timerslack(), 1000)
@@ -271,6 +284,7 @@ class PrctlTest(unittest.TestCase):
         prctl.set_timing(prctl.TIMING_STATISTICAL)
         self.assertEqual(prctl.get_timing(), prctl.TIMING_STATISTICAL)
 
+    @require('set_tsc')
     def test_tsc(self):
         """Test manipulation of the timestamp counter flag"""
         if re.match('i.86|x86_64', self.arch):
@@ -329,6 +343,7 @@ class PrctlTest(unittest.TestCase):
         self.assertRaises(OSError, prctl.set_caps, (prctl.CAP_SETUID, prctl.ALL_FLAGS, True))
 
     capabilities = [x[4:].lower() for x in dir(_prctl) if x.startswith('CAP_')]
+    @require('cap_to_name')
     def test_capabilities_objects(self):
         for cap in self.capabilities:
             if cap in ('all','effective','permitted','inheritable','setuid'):
@@ -362,6 +377,7 @@ class PrctlTest(unittest.TestCase):
             prctl.cap_effective.limit(*caps)
             self.assertEqual(prctl.cap_effective.sys_nice, False)
 
+    @require('cap_to_name')
     def test_captoname(self):
         self.assertEqual(_prctl.cap_to_name(prctl.CAP_SYS_ADMIN), 'sys_admin')
 

@@ -31,7 +31,7 @@ try:
     subprocess.call(['gcc','-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except:
     sys.stderr.write("You need to install gcc to build this module\n")
-    exit = True
+    sys.exit(1)
 
 sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 sp.communicate('#include <sys/prctl.h>\n'.encode())
