@@ -45,11 +45,11 @@ def sec_wrapper(bit):
 
 # Wrap the capabilities, capability bounding set and securebits in an object
 _ALL_FLAG_NAMES  = ('CAP_EFFECTIVE', 'CAP_INHERITABLE', 'CAP_PERMITTED')
-_ALL_CAP_NAMES = [x for x in dir(_prctl) if x.startswith('CAP_') and x not in _ALL_FLAG_NAMES]
-ALL_FLAG_NAMES  = [x[4:].lower() for x in _ALL_FLAG_NAMES]
-ALL_CAP_NAMES  = [x[4:].lower() for x in _ALL_CAP_NAMES]
-ALL_CAPS = tuple([getattr(_prctl,x) for x in _ALL_CAP_NAMES])
-ALL_FLAGS = tuple([getattr(_prctl,x) for x in _ALL_FLAG_NAMES])
+_ALL_CAP_NAMES = tuple(x for x in dir(_prctl) if x.startswith('CAP_') and x not in _ALL_FLAG_NAMES)
+ALL_FLAG_NAMES  = list(x[4:].lower() for x in _ALL_FLAG_NAMES)
+ALL_CAP_NAMES  = list(x[4:].lower() for x in _ALL_CAP_NAMES)
+ALL_CAPS = tuple(getattr(_prctl,x) for x in _ALL_CAP_NAMES)
+ALL_FLAGS = tuple(getattr(_prctl,x) for x in _ALL_FLAG_NAMES)
 
 class Capbset(object):
     __slots__ = ALL_CAP_NAMES
