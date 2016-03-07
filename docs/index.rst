@@ -234,14 +234,14 @@ The prctl module is now ready to use.
   setuid, etc). Use pid 0 to disallow all processes. For more details, see
   :file:`/etc/sysctl.d/10-ptrace.conf`.
 
-  This is an ubuntu specific extension, appearing as of Ubuntu 10.10
+  This is only available in linux 3.4 and newer
 
 .. function:: get_ptracer(pid)
 
   Returns the top of the process tree that is allowed to use :func:`PTRACE` on
   the calling process. See :func:`set_ptracer`.
 
-  This is an ubuntu specific extension, appearing as of Ubuntu 10.10
+  This is only available in linux 3.4 and newer
 
 .. function:: set_seccomp(mode)
 
