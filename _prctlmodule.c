@@ -283,6 +283,9 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_GET_TSC):
 #endif
         case(PR_GET_UNALIGN):
+#ifdef PR_GET_TID_ADDRESS
+        case(PR_GET_TID_ADDRESS):
+#endif
             result = prctl(option, &arg, 0, 0, 0);
             if(result < 0) {
                 PyErr_SetFromErrno(PyExc_OSError);
@@ -702,6 +705,9 @@ PyInit__prctl(void)
     namedattribute(UNALIGN);
     namedconstant(PR_UNALIGN_NOPRINT);
     namedconstant(PR_UNALIGN_SIGBUS);
+#ifdef PR_GET_TID_ADDRESS
+    namedconstant(PR_GET_TID_ADDRESS);
+#endif
     /* Add the CAP_* constants too */
     namedconstant(CAP_EFFECTIVE);
     namedconstant(CAP_PERMITTED);

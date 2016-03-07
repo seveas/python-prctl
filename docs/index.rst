@@ -265,6 +265,13 @@ The prctl module is now ready to use.
   operation is only available if the kernel is configured with
   :const:`CONFIG_SECCOMP` enabled.
 
+.. function:: get_tid_address()
+
+  Allows the process to obtain its own `clear_tid_address`, used when
+  checkpointing/restoring processes.
+
+  This is only available in linux 3.5 and newer
+
 .. function:: set_timerslack()
 
   Control the default "rounding" in nqnoseconds that is used by :func:`select`,
