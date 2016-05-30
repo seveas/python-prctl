@@ -29,7 +29,7 @@
 /* New in 2.6.XX (Ubuntu 10.10) */
 #define NOT_SET (-1)
 #ifdef PR_SET_PTRACER
-/* This one has no getter for some reason, but guard agains that being fixed  */
+/* This one has no getter for some reason, but guard against that being fixed  */
 #ifndef PR_GET_PTRACER
 #define PR_GET_PTRACER NOT_SET
 /* Icky global variable to cache ptracer */
@@ -316,7 +316,7 @@ prctl_prctl(PyObject *self, PyObject *args)
             break;
 #endif
         default:
-            PyErr_SetString(PyExc_ValueError, "Unkown prctl option");
+            PyErr_SetString(PyExc_ValueError, "Unknown prctl option");
             return NULL;
     }
 
