@@ -299,7 +299,7 @@ class PrctlTest(unittest.TestCase):
             self.assertRaises(OSError, prctl.set_tsc, prctl.TSC_ENABLE)
 
     def test_unalign(self):
-        """Test manipulation of the unalogned access setting"""
+        """Test manipulation of the unaligned access setting"""
         if self.arch in ('ia64', 'parisc', 'powerpc', 'alpha'):
             # FIXME untested
             prctl.set_unalign(prctl.UNALIGN_NOPRINT)

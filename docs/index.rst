@@ -59,7 +59,7 @@ The prctl module is now ready to use.
 
 .. function:: set_child_subreaper(flag)
 
-  When processes double-fork, they get implicitely re-parented to PID 1. Using
+  When processes double-fork, they get implicitly re-parented to PID 1. Using
   this function, processes can mark themselves as service manager and will
   remain parent of any such processes they launch, becoming a sort of sub-init.
   They will then be responsible for handling :const:`~signal.SIGCHLD` and
@@ -85,7 +85,7 @@ The prctl module is now ready to use.
 
   Return the state of the dumpable flag.
 
-.. function:: set_endian(endiannes)
+.. function:: set_endian(endianness)
 
   Set the endian-ness of the calling process. Valid values are
   :const:`~prctl.ENDIAN_BIG`, :const:`~prctl.ENDIAN_LITTLE` and
@@ -140,8 +140,8 @@ The prctl module is now ready to use.
 .. function:: set_keepcaps(flag)
 
   Set the state of the thread's "keep capabilities" flag, which determines
-  whether the threads's effective and permitted capability sets are cleared
-  when a change is made to the threads's user IDs such that the threads's real
+  whether the thread's effective and permitted capability sets are cleared
+  when a change is made to the thread's user IDs such that the thread's real
   UID, effective UID, and saved set-user-ID all become non-zero when at least
   one of them previously had the value 0. (By default, these credential sets
   are cleared). This value will be reset to :const:`False` on subsequent calls
@@ -149,7 +149,7 @@ The prctl module is now ready to use.
 
 .. function:: get_keepcaps()
 
-  Return the current state of the calling threads's "keep capabilities" flag.
+  Return the current state of the calling thread's "keep capabilities" flag.
 
 .. function:: set_mce_kill(policy)
 
@@ -274,7 +274,7 @@ The prctl module is now ready to use.
 
 .. function:: set_timerslack()
 
-  Control the default "rounding" in nqnoseconds that is used by :func:`select`,
+  Control the default "rounding" in nanoseconds that is used by :func:`select`,
   :func:`poll` and friends.
 
   The default value of the slack is 50 microseconds; this is significantly less
@@ -387,9 +387,9 @@ For the purpose of performing permission checks, traditional Unix
 implementations distinguish two categories of processes: privileged processes
 (whose effective user ID is 0, referred to as superuser or root), and
 unprivileged processes (whose effective UID is non-zero). Privileged processes
-bypass all kernel permission checks, while unpriv‐ ileged processes are subject
+bypass all kernel permission checks, while unprivileged processes are subject
 to full permission checking based on the process's credentials (usually:
-effective UID, effective GID, and sup‐ plementary group list).
+effective UID, effective GID, and supplementary group list).
 
 Starting with kernel 2.2, Linux divides the privileges traditionally associated
 with superuser into distinct units, known as capabilities, which can be
@@ -740,7 +740,7 @@ The following attributes are available:
 .. attribute:: securebits.no_setuid_fixup
 
   Setting this flag stops the kernel from adjusting capability sets when the
-  threads's effective and file system UIDs are switched between zero and
+  thread's effective and file system UIDs are switched between zero and
   non-zero values. (See the subsection Effect of User ID Changes on
   Capabilities in :manpage:`capabilities(7)`)
 
