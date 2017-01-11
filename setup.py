@@ -1,6 +1,8 @@
 #!/usr/bin/python
-
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 import glob
 import os
 import subprocess
