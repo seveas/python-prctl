@@ -99,7 +99,7 @@ securebits = Securebits()
 # Copy constants from _prctl and generate the functions
 self = sys.modules['prctl']
 for name in dir(_prctl):
-    if name.startswith('PR_GET') or name.startswith('PR_SET') or name.startswith('PR_CAPBSET'):
+    if name.startswith('PR_GET') or name.startswith('PR_SET') and name != 'PR_SET_PTRACER_ANY' or name.startswith('PR_CAPBSET'):
         # Generate a function for this option
         val = getattr(_prctl, name)
         friendly_name = name.lower()[3:]

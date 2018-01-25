@@ -55,6 +55,7 @@ class PrctlTest(unittest.TestCase):
         self.assertRaises(AttributeError, getattr, prctl, 'PR_ENDIAN_LITTLE')
         self.assertRaises(AttributeError, getattr, prctl, 'PR_CAPBSET_READ')
         self.assertRaises(AttributeError, getattr, prctl, 'CAPBSET_READ')
+        self.assertEqual(prctl.SET_PTRACER_ANY, _prctl.PR_SET_PTRACER_ANY)
 
     @require('PR_CAPBSET_READ')
     def test_capbset(self):
