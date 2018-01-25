@@ -217,10 +217,17 @@ The prctl module is now ready to use.
 
 .. function:: set_pdeathsig(signal)
 
-  Set the parent process death signal of the calling process (either a valid
-  signal value from the :mod:`signal` module, or 0 to clear). This is the
-  signal that the calling process will get when its parent dies. This value is
-  cleared for the child of a :func:`fork`.
+  Set the parent death signal of the calling process (either a valid signal
+  value from the :mod:`signal` module, or 0 to clear). This is the signal that
+  the calling process will get when its parent dies. This value is cleared for
+  the child of a :func:`fork`.
+
+  .. warning::
+
+    The "parent" in this case is considered to be the thread that created
+    this process. In other words, the signal will be sent when that
+    thread terminates (via, for example, :func:`pthread_exit()`), rather than after all
+    of the threads in the parent process terminate.
 
 .. function:: get_pdeathsig()
 
