@@ -1,3 +1,9 @@
+python-prctl (1.7-1) bionic; urgency=medium
+
+  * New upstream version
+
+ -- Dennis Kaarsemaker <dennis@kaarsemaker.net>  Fri, 26 Jan 2018 23:27:59 +0100
+
 python-prctl (1.6.1-1) utopic; urgency=medium
 
   * New upstream bugfix release
