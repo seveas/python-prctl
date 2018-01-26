@@ -1,5 +1,5 @@
 # python-pctrl -- python interface to the prctl function
-# (c)2010-2015 Dennis Kaarsemaker <dennis@kaarsemaker.net>
+# (c)2010-2018 Dennis Kaarsemaker <dennis@kaarsemaker.net>
 # See COPYING for licensing details
 
 import distutils.util
