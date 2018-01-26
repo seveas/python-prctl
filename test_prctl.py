@@ -1,5 +1,5 @@
 # python-pctrl -- python interface to the prctl function
-# (c)2010-2015 Dennis Kaarsemaker <dennis@kaarsemaker.net
+# (c)2010-2018 Dennis Kaarsemaker <dennis@kaarsemaker.net>
 # See COPYING for licensing details
 
 import distutils.util
@@ -55,6 +55,7 @@ class PrctlTest(unittest.TestCase):
         self.assertRaises(AttributeError, getattr, prctl, 'PR_ENDIAN_LITTLE')
         self.assertRaises(AttributeError, getattr, prctl, 'PR_CAPBSET_READ')
         self.assertRaises(AttributeError, getattr, prctl, 'CAPBSET_READ')
+        self.assertEqual(prctl.SET_PTRACER_ANY, _prctl.PR_SET_PTRACER_ANY)
 
     @require('PR_CAPBSET_READ')
     def test_capbset(self):
@@ -298,7 +299,7 @@ class PrctlTest(unittest.TestCase):
             self.assertRaises(OSError, prctl.set_tsc, prctl.TSC_ENABLE)
 
     def test_unalign(self):
-        """Test manipulation of the unalogned access setting"""
+        """Test manipulation of the unaligned access setting"""
         if self.arch in ('ia64', 'parisc', 'powerpc', 'alpha'):
             # FIXME untested
             prctl.set_unalign(prctl.UNALIGN_NOPRINT)

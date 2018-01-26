@@ -1,6 +1,6 @@
 /*
  * python-pctrl -- python interface to the prctl function
- * (c)2010-2015 Dennis Kaarsemaker <dennis@kaarsemaker.net
+ * (c)2010-2018 Dennis Kaarsemaker <dennis@kaarsemaker.net>
  * See COPYING for licensing details
  */
 
@@ -29,7 +29,7 @@
 /* New in 2.6.XX (Ubuntu 10.10) */
 #define NOT_SET (-1)
 #ifdef PR_SET_PTRACER
-/* This one has no getter for some reason, but guard agains that being fixed  */
+/* This one has no getter for some reason, but guard against that being fixed  */
 #ifndef PR_GET_PTRACER
 #define PR_GET_PTRACER NOT_SET
 /* Icky global variable to cache ptracer */
@@ -283,6 +283,9 @@ prctl_prctl(PyObject *self, PyObject *args)
         case(PR_GET_TSC):
 #endif
         case(PR_GET_UNALIGN):
+#ifdef PR_GET_TID_ADDRESS
+        case(PR_GET_TID_ADDRESS):
+#endif
             result = prctl(option, &arg, 0, 0, 0);
             if(result < 0) {
                 PyErr_SetFromErrno(PyExc_OSError);
@@ -316,7 +319,7 @@ prctl_prctl(PyObject *self, PyObject *args)
             break;
 #endif
         default:
-            PyErr_SetString(PyExc_ValueError, "Unkown prctl option");
+            PyErr_SetString(PyExc_ValueError, "Unknown prctl option");
             return NULL;
     }
 
@@ -702,6 +705,9 @@ PyInit__prctl(void)
     namedattribute(UNALIGN);
     namedconstant(PR_UNALIGN_NOPRINT);
     namedconstant(PR_UNALIGN_SIGBUS);
+#ifdef PR_GET_TID_ADDRESS
+    namedconstant(PR_GET_TID_ADDRESS);
+#endif
     /* Add the CAP_* constants too */
     namedconstant(CAP_EFFECTIVE);
     namedconstant(CAP_PERMITTED);

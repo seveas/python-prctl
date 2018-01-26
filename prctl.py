@@ -1,5 +1,5 @@
 # python-pctrl -- python interface to the prctl function
-# (c)2010-2015 Dennis Kaarsemaker <dennis@kaarsemaker.net
+# (c)2010-2018 Dennis Kaarsemaker <dennis@kaarsemaker.net>
 # See COPYING for licensing details
 
 import _prctl # The C interface
@@ -45,11 +45,11 @@ def sec_wrapper(bit):
 
 # Wrap the capabilities, capability bounding set and securebits in an object
 _ALL_FLAG_NAMES  = ('CAP_EFFECTIVE', 'CAP_INHERITABLE', 'CAP_PERMITTED')
-_ALL_CAP_NAMES = [x for x in dir(_prctl) if x.startswith('CAP_') and x not in _ALL_FLAG_NAMES]
-ALL_FLAG_NAMES  = [x[4:].lower() for x in _ALL_FLAG_NAMES]
-ALL_CAP_NAMES  = [x[4:].lower() for x in _ALL_CAP_NAMES]
-ALL_CAPS = tuple([getattr(_prctl,x) for x in _ALL_CAP_NAMES])
-ALL_FLAGS = tuple([getattr(_prctl,x) for x in _ALL_FLAG_NAMES])
+_ALL_CAP_NAMES = tuple(x for x in dir(_prctl) if x.startswith('CAP_') and x not in _ALL_FLAG_NAMES)
+ALL_FLAG_NAMES  = list(x[4:].lower() for x in _ALL_FLAG_NAMES)
+ALL_CAP_NAMES  = list(x[4:].lower() for x in _ALL_CAP_NAMES)
+ALL_CAPS = tuple(getattr(_prctl,x) for x in _ALL_CAP_NAMES)
+ALL_FLAGS = tuple(getattr(_prctl,x) for x in _ALL_FLAG_NAMES)
 
 class Capbset(object):
     __slots__ = ALL_CAP_NAMES
@@ -99,7 +99,7 @@ securebits = Securebits()
 # Copy constants from _prctl and generate the functions
 self = sys.modules['prctl']
 for name in dir(_prctl):
-    if name.startswith('PR_GET') or name.startswith('PR_SET') or name.startswith('PR_CAPBSET'):
+    if name.startswith('PR_GET') or name.startswith('PR_SET') and name != 'PR_SET_PTRACER_ANY' or name.startswith('PR_CAPBSET'):
         # Generate a function for this option
         val = getattr(_prctl, name)
         friendly_name = name.lower()[3:]
