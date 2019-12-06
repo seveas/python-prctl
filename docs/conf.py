@@ -45,7 +45,7 @@ copyright = u'2010-2018, Dennis Kaarsemaker'
 # built documents.
 #
 # The short X.Y version.
-version = '1.7.0'
+version = '1.7.1'
 # The full version, including alpha/beta/rc tags.
 release = version
 
