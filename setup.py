@@ -39,7 +39,7 @@ if sp.returncode:
     sys.stderr.write("You need to install libc development headers to build this module\n")
     exit = True
 
-sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
 sp.communicate('#include <sys/capability.h>\n'.encode())
 if sp.returncode:
     sys.stderr.write("You need to install libcap development headers to build this module\n")
