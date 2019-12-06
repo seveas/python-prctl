@@ -33,7 +33,7 @@ except:
     sys.stderr.write("You need to install gcc to build this module\n")
     sys.exit(1)
 
-sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+sp = subprocess.Popen(['cpp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
 sp.communicate('#include <sys/prctl.h>\n'.encode())
 if sp.returncode:
     sys.stderr.write("You need to install libc development headers to build this module\n")
