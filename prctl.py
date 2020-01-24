@@ -177,6 +177,17 @@ def get_caps(*args):
 def set_caps(*args):
     return _prctl.set_caps(*_parse_caps(True, *args))
 
+def get_ambient(cap):
+    return _prctl.prctl(_prctl.PR_CAP_AMBIENT,_prctl.PR_CAP_AMBIENT_IS_SET,cap)
+
+def set_ambient(cap,value):
+    action = _prctl.PR_CAP_AMBIENT_RAISE if value else _prctl.PR_CAP_AMBIENT_LOWER
+    return _prctl.prctl(_prctl.PR_CAP_AMBIENT,action,cap)
+
+def cap_reset_ambient():
+    return _prctl.prctl(_prctl.PR_CAP_AMBIENT,_prctl.PR_CAP_AMBIENT_CLEAR_ALL,0)
+
+              
 # Functions copied directly, not part of the prctl interface
 set_proctitle = _prctl.set_proctitle
 

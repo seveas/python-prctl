@@ -50,34 +50,67 @@ prctl_prctl(PyObject *self, PyObject *args)
 {
     long option = 0;
     long arg = 0;
+    long arg3 = 0;
     char *argstr = NULL;
     char name[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
     int result;
 
     /*
-     * Accept single int, two ints and int+string. That covers all current
-     * prctl possibilities. int+string is required for (and only accepted for)
-     * PR_SET_NAME
+     * Accept single int, two ints, int+string, and three ints. That covers all current
+     * prctl possibilities, including ambient settings.
+     * int+string is required for (and only accepted for) PR_SET_NAME
      */
-    if(!PyArg_ParseTuple(args, "l|l", &option, &arg)) {
-        if(!PyArg_ParseTuple(args, "ls", &option, &argstr)) {
-            return NULL;
-        }
-        if(option != PR_SET_NAME) {
-            PyErr_SetString(PyExc_TypeError, "an integer is required");
-            return NULL;
-        }
-        PyErr_Clear();
+    if(!PyArg_ParseTuple(args, "lll", &option, &arg, &arg3)) {
+    	if(!PyArg_ParseTuple(args, "l|l", &option, &arg)) {
+    		if(!PyArg_ParseTuple(args, "ls", &option, &argstr)) {
+    			return NULL;
+    		}
+    		if(option != PR_SET_NAME) {
+    			PyErr_SetString(PyExc_TypeError, "an integer is required");
+    			return NULL;
+    		}
+    		PyErr_Clear();
+    	}
+    	else {
+    		if(option == PR_SET_NAME) {
+    			PyErr_SetString(PyExc_TypeError, "a string is required");
+    			return NULL;
+    		}
+    	}
+    	PyErr_Clear();
     }
     else {
-        if(option == PR_SET_NAME) {
-            PyErr_SetString(PyExc_TypeError, "a string is required");
-            return NULL;
-        }
+
+#ifdef PR_CAP_AMBIENT
+    	if(option != PR_CAP_AMBIENT)
+#endif
+    	{
+    		PyErr_SetString(PyExc_TypeError, "incorrect option");
+			return NULL;
+		}
     }
 
     /* Validate the optional arguments */
     switch(option) {
+#ifdef PR_CAP_AMBIENT
+    	case(PR_CAP_AMBIENT):
+			switch(arg) {
+    			case(PR_CAP_AMBIENT_RAISE):
+    			case(PR_CAP_AMBIENT_LOWER):
+    			case(PR_CAP_AMBIENT_IS_SET):
+					if (cap_valid(arg3)) {
+						break;
+					}
+    			case(PR_CAP_AMBIENT_CLEAR_ALL):
+					if(arg3 == 0) {
+						break;
+					}
+    			default:
+					PyErr_SetString(PyExc_TypeError, "Argument error");
+					return NULL;
+			}
+    		break;
+#endif
 #ifdef PR_CAPBSET_READ
         case(PR_CAPBSET_READ):
         case(PR_CAPBSET_DROP):
@@ -187,6 +220,21 @@ prctl_prctl(PyObject *self, PyObject *args)
      * settings or the result of a getter call as a PyInt or PyString.
      */
     switch(option) {
+#ifdef PR_CAP_AMBIENT
+    	case(PR_CAP_AMBIENT):
+			result = prctl(option, arg, arg3, 0, 0);
+			if(result < 0) {
+				PyErr_SetFromErrno(PyExc_OSError);
+				return NULL;
+			}
+			switch(arg) {
+            	case(PR_CAP_AMBIENT_IS_SET):
+					return PyBool_FromLong(result);
+            	default:
+            		return PyInt_FromLong(result);
+			}
+			break;
+#endif
 #ifdef PR_CAPBSET_READ
         case(PR_CAPBSET_READ):
         case(PR_CAPBSET_DROP):
@@ -405,7 +453,7 @@ static PyObject *
 prctl_set_proctitle(PyObject *self, PyObject *args)
 {
     int argc = 0;
-    char **argv;
+    char **argv = NULL;
     int len;
     char *title;
     if(!PyArg_ParseTuple(args, "s", &title)) {
@@ -643,6 +691,13 @@ PyInit__prctl(void)
 #ifdef PR_CAPBSET_READ
     namedconstant(PR_CAPBSET_READ);
     namedconstant(PR_CAPBSET_DROP);
+#endif
+#ifdef PR_CAP_AMBIENT
+    namedconstant(PR_CAP_AMBIENT);
+	namedconstant(PR_CAP_AMBIENT_IS_SET);
+	namedconstant(PR_CAP_AMBIENT_RAISE);
+	namedconstant(PR_CAP_AMBIENT_LOWER);
+	namedconstant(PR_CAP_AMBIENT_CLEAR_ALL);
 #endif
     namedattribute(DUMPABLE);
     namedattribute(ENDIAN);
