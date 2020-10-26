@@ -366,6 +366,9 @@ static int _Py_GetArgcArgv(int* argc, char ***argv) {
     char **buf = NULL , *arg0 = NULL, *ptr = 0, *limit = NULL;
 
     Py_GetArgcArgv(argc, &argv_w);
+    if (*argc < 1 || argv_w == NULL) {
+        return 0;
+    }
 
     buf = (char **)malloc((*argc + 1) * sizeof(char *));
     buf[*argc] = NULL;
