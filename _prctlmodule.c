@@ -715,46 +715,52 @@ PyInit__prctl(void)
     namedconstant(CAP_EFFECTIVE);
     namedconstant(CAP_PERMITTED);
     namedconstant(CAP_INHERITABLE);
+    namedconstant(CAP_AUDIT_CONTROL);
+    namedconstant(CAP_AUDIT_READ);
+    namedconstant(CAP_AUDIT_WRITE);
+    namedconstant(CAP_BLOCK_SUSPEND);
+    namedconstant(CAP_BPF);
     namedconstant(CAP_CHOWN);
     namedconstant(CAP_DAC_OVERRIDE);
     namedconstant(CAP_DAC_READ_SEARCH);
     namedconstant(CAP_FOWNER);
     namedconstant(CAP_FSETID);
-    namedconstant(CAP_KILL);
-    namedconstant(CAP_SETGID);
-    namedconstant(CAP_SETUID);
-    namedconstant(CAP_SETPCAP);
-    namedconstant(CAP_LINUX_IMMUTABLE);
-    namedconstant(CAP_NET_BIND_SERVICE);
-    namedconstant(CAP_NET_BROADCAST);
-    namedconstant(CAP_NET_ADMIN);
-    namedconstant(CAP_NET_RAW);
     namedconstant(CAP_IPC_LOCK);
     namedconstant(CAP_IPC_OWNER);
-    namedconstant(CAP_SYS_MODULE);
-    namedconstant(CAP_SYS_RAWIO);
-    namedconstant(CAP_SYS_CHROOT);
-    namedconstant(CAP_SYS_PTRACE);
-    namedconstant(CAP_SYS_PACCT);
-    namedconstant(CAP_SYS_ADMIN);
-    namedconstant(CAP_SYS_BOOT);
-    namedconstant(CAP_SYS_NICE);
-    namedconstant(CAP_SYS_RESOURCE);
-    namedconstant(CAP_SYS_TIME);
-    namedconstant(CAP_SYS_TTY_CONFIG);
-    namedconstant(CAP_MKNOD);
+    namedconstant(CAP_KILL);
     namedconstant(CAP_LEASE);
-    namedconstant(CAP_AUDIT_WRITE);
-    namedconstant(CAP_AUDIT_CONTROL);
-#ifdef CAP_SETFCAP
-    namedconstant(CAP_SETFCAP);
-#endif
+    namedconstant(CAP_LINUX_IMMUTABLE);
 #ifdef CAP_MAC_OVERRIDE
     namedconstant(CAP_MAC_OVERRIDE);
 #endif
 #ifdef CAP_MAC_ADMIN
     namedconstant(CAP_MAC_ADMIN);
 #endif
+    namedconstant(CAP_MKNOD);
+    namedconstant(CAP_NET_ADMIN);
+    namedconstant(CAP_NET_BIND_SERVICE);
+    namedconstant(CAP_NET_BROADCAST);
+    namedconstant(CAP_NET_RAW);
+    namedconstant(CAP_PERFMON);
+#ifdef CAP_SETFCAP
+    namedconstant(CAP_SETFCAP);
+#endif
+    namedconstant(CAP_SETGID);
+    namedconstant(CAP_SETPCAP);
+    namedconstant(CAP_SETUID);
+    namedconstant(CAP_SYS_ADMIN);
+    namedconstant(CAP_SYS_BOOT);
+    namedconstant(CAP_SYS_CHROOT);
+    namedconstant(CAP_SYS_MODULE);
+    namedconstant(CAP_SYS_NICE);
+    namedconstant(CAP_SYS_PACCT);
+    namedconstant(CAP_SYS_PTRACE);
+    namedconstant(CAP_SYS_RAWIO);
+    namedconstant(CAP_SYS_RESOURCE);
+    namedconstant(CAP_SYS_TIME);
+    namedconstant(CAP_SYS_TTY_CONFIG);
+    namedconstant(CAP_SYSLOG);
+    namedconstant(CAP_WAKE_ALARM);
 #ifdef CAP_SYSLOG
     namedconstant(CAP_SYSLOG);
 #endif
