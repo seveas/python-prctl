@@ -7,6 +7,7 @@ import glob
 import os
 import re
 import signal
+import stat
 import sys
 import subprocess
 import unittest
@@ -179,6 +180,9 @@ class PrctlTest(unittest.TestCase):
     def test_no_new_privs(self):
         """Test the no_new_privs function"""
         self.assertEqual(prctl.get_no_new_privs(), 0)
+        if not (os.stat('/bin/ping').st_mode & stat.S_ISUID):
+           # Test doesn't work unless ping is setuid
+           return
         pid = os.fork()
         if pid:
             self.assertEqual(os.waitpid(pid, 0)[1], 0)
