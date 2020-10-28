@@ -44,12 +44,22 @@ def sec_wrapper(bit):
     return property(getter, setter)
 
 # Wrap the capabilities, capability bounding set and securebits in an object
-_ALL_FLAG_NAMES  = ('CAP_EFFECTIVE', 'CAP_INHERITABLE', 'CAP_PERMITTED')
+_ALL_FLAG_NAMES = ('CAP_EFFECTIVE', 'CAP_INHERITABLE', 'CAP_PERMITTED')
 _ALL_CAP_NAMES = tuple(x for x in dir(_prctl) if x.startswith('CAP_') and x not in _ALL_FLAG_NAMES)
-ALL_FLAG_NAMES  = list(x[4:].lower() for x in _ALL_FLAG_NAMES)
-ALL_CAP_NAMES  = list(x[4:].lower() for x in _ALL_CAP_NAMES)
-ALL_CAPS = tuple(getattr(_prctl,x) for x in _ALL_CAP_NAMES)
+ALL_FLAG_NAMES = tuple(x[4:].lower() for x in _ALL_FLAG_NAMES)
+ALL_CAP_NAMES = tuple(x[4:].lower() for x in _ALL_CAP_NAMES)
 ALL_FLAGS = tuple(getattr(_prctl,x) for x in _ALL_FLAG_NAMES)
+ALL_CAPS = tuple(getattr(_prctl,x) for x in _ALL_CAP_NAMES)
+
+for i in range(_prctl.CAP_LAST_CAP+1):
+    if i not in ALL_CAPS:
+        _ALL_CAP_NAMES += ("CAP_UNKNOWN_%d" % i,)
+del i
+
+if len(_ALL_CAP_NAMES) != len(ALL_CAPS):
+    warnings.warn("not all known capabilities are named, this is a bug in python-prctl", RuntimeWarning)
+    ALL_CAP_NAMES  = tuple(x[4:].lower() for x in _ALL_CAP_NAMES)
+    ALL_CAPS = tuple(getattr(_prctl,x) for x in _ALL_CAP_NAMES)
 
 class Capbset(object):
     __slots__ = ALL_CAP_NAMES
@@ -69,7 +79,7 @@ class Capbset(object):
 capbset = Capbset()
 
 class Capset(object):
-    __slots__ = ALL_CAP_NAMES + ['flag']
+    __slots__ = ALL_CAP_NAMES + ('flag',)
     def __init__(self, flag):
         self.flag = flag
         for name in _ALL_CAP_NAMES:

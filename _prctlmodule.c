@@ -760,14 +760,13 @@ PyInit__prctl(void)
     namedconstant(CAP_SYS_RESOURCE);
     namedconstant(CAP_SYS_TIME);
     namedconstant(CAP_SYS_TTY_CONFIG);
-    namedconstant(CAP_SYSLOG);
-    namedconstant(CAP_WAKE_ALARM);
 #ifdef CAP_SYSLOG
     namedconstant(CAP_SYSLOG);
 #endif
 #ifdef CAP_WAKE_ALARM
     namedconstant(CAP_WAKE_ALARM);
 #endif
+    namedconstant(CAP_LAST_CAP);
     /* And the securebits constants */
     namedconstant(SECURE_KEEP_CAPS);
     namedconstant(SECURE_NO_SETUID_FIXUP);
