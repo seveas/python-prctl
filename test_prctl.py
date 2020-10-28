@@ -157,6 +157,8 @@ class PrctlTest(unittest.TestCase):
     @require('set_mce_kill')
     def test_mce_kill(self):
         """Test the MCE_KILL setting"""
+        if not os.path.exists('/proc/sys/vm/memory_failure_early_kill'):
+           return
         fd = open('/proc/sys/vm/memory_failure_early_kill')
         current = int(fd.read().strip())
         fd.close()
