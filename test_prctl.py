@@ -197,17 +197,19 @@ class PrctlTest(unittest.TestCase):
 
     def test_proctitle(self):
         """Test setting the process title, including too long titles"""
+        with open('/proc/self/cmdline') as fd:
+           orig = len(fd.read())
         title = "This is a test!"
         prctl.set_proctitle(title)
-        ps_output = subprocess.Popen(['ps', '-f', '-p', '%d' % os.getpid()],
-                                     stdout=subprocess.PIPE).communicate()[0].decode('ascii')
-        self.assertTrue(ps_output.strip().endswith(title))
-        # This should not segfault but truncate
-        title2 = "And this is a test too! Don't segfault."
+        with open('/proc/self/cmdline') as fd:
+           cmdline = fd.read().rstrip('\n\0')
+        self.assertEqual(cmdline, title)
+        # This should not segfault
+        title2 = "And this is a test too! Don't segfault." * 3
         prctl.set_proctitle(title2)
-        ps_output = subprocess.Popen(['ps', '-f', '-p', '%d' % os.getpid()],
-                                     stdout=subprocess.PIPE).communicate()[0].decode('ascii')
-        self.assertTrue(ps_output.strip().endswith(title2[:len(title)]))
+        with open('/proc/self/cmdline') as fd:
+           cmdline = fd.read().rstrip('\n\0')
+        self.assertEqual(cmdline, title2[:orig-1])
 
     def test_pdeathsig(self):
         """Test manipulation of the pdeathsig setting"""

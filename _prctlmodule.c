@@ -327,9 +327,6 @@ prctl_prctl(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-/* While not part of prctl, this complements PR_SET_NAME */
-static int __real_argc = -1;
-static char **__real_argv = NULL;
 #if PY_MAJOR_VERSION < 3
 #define _Py_GetArgcArgv Py_GetArgcArgv
 #else
@@ -408,28 +405,24 @@ static PyObject *
 prctl_set_proctitle(PyObject *self, PyObject *args)
 {
     int argc = 0;
-    char **argv;
-    int len;
     char *title;
+    static size_t len = 0;
+    static char **argv;
+
     if(!PyArg_ParseTuple(args, "s", &title)) {
         return NULL;
     }
-    if(__real_argc > 0)  {
-        argc = __real_argc;
-        argv = __real_argv;
-    }
-    else {
+    if(argv == NULL)  {
         _Py_GetArgcArgv(&argc, &argv);
-        __real_argc = argc;
-        __real_argv = argv;
+        if(argc > 0) {
+            len = (size_t)(argv[argc-1]) + strlen(argv[argc-1]) - (size_t)(argv[0]);
+        }
     }
 
-    if(argc <= 0) {
+    if(len <= 0) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to locate argc/argv");
         return NULL;
     }
-    /* Determine up to where we can write */
-    len = (size_t)(argv[argc-1]) + strlen(argv[argc-1]) - (size_t)(argv[0]);
     strncpy(argv[0], title, len);
     if(strlen(title) < len)
         memset(argv[0] + strlen(title), 0, len - strlen(title));
