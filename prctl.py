@@ -182,4 +182,4 @@ set_proctitle = _prctl.set_proctitle
 
 # Delete the init-only things
 del self, friendly_name, name, prctl_wrapper, cap_wrapper, capb_wrapper, sec_wrapper
-del Capbset, Capset, Securebits, sys, val
+del sys, val
