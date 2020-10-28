@@ -11,8 +11,12 @@ if sys.version_info[0] >= 3:
 
 # Code generation functions
 def prctl_wrapper(option):
-    def call_prctl(arg=0):
-        return _prctl.prctl(option, arg)
+    def call_prctl(arg=None, arg2=None):
+        if arg == None:
+            return _prctl.prctl(option)
+        if arg2 == None:
+            return _prctl.prctl(option, arg)
+        return _prctl.prctl(option, arg, arg2)
     return call_prctl
 
 def capb_wrapper(cap):
@@ -108,8 +112,11 @@ securebits = Securebits()
 
 # Copy constants from _prctl and generate the functions
 self = sys.modules['prctl']
+
 for name in dir(_prctl):
-    if name.startswith('PR_GET') or name.startswith('PR_SET') and name != 'PR_SET_PTRACER_ANY' or name.startswith('PR_CAPBSET'):
+    if name.startswith(('PR_GET', 'PR_SET', 'PR_CAPBSET', 'PR_PAC_RESET', 'PR_MPX', 'PR_TASK')) and not \
+       name.startswith(('PR_SET_MM_', 'PR_SET_PTRACER_')):
+
         # Generate a function for this option
         val = getattr(_prctl, name)
         friendly_name = name.lower()[3:]

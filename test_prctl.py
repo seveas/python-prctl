@@ -148,6 +148,32 @@ class PrctlTest(unittest.TestCase):
             self.assertRaises(OSError, prctl.get_fpexc)
             self.assertRaises(OSError, prctl.set_fpexc)
 
+    @require('set_fp_mode')
+    def test_fp_mode(self):
+        """Test manipulation of the fp_mode setting"""
+        if self.arch == 'mips':
+            # FIXME - untested
+            prctl.set_fp_mode(prctl.FP_MODE_FR)
+            self.assertEqual(prctl.get_fp_mode(), prctl.FP_MODE_FR)
+            prctl.set_fp_mode(prctl.FP_MODE_FRE)
+            self.assertEqual(prctl.get_fp_mode(), prctl.FP_MODE_FRE)
+            self.assertRaises(ValueError, prctl.set_fp_mode, 999)
+        else:
+            self.assertRaises(OSError, prctl.get_fpexc)
+            self.assertRaises(OSError, prctl.set_fpexc)
+
+    @require('set_io_flusher')
+    def test_io_flusher(self):
+        if self.am_root:
+            self.assertEqual(prctl.get_io_flusher(), 0)
+            self.assertEqual(prctl.set_io_flusher(True), None)
+            self.assertEqual(prctl.get_io_flusher(), 1)
+            self.assertEqual(prctl.set_io_flusher(False), None)
+            self.assertEqual(prctl.get_io_flusher(), 0)
+        else:
+           self.assertRaises(OSError, prctl.get_io_flusher)
+           self.assertRaises(OSError, prctl.set_io_flusher)
+
     def test_keepcaps(self):
         """Test manipulation of the keepcaps setting"""
         prctl.set_keepcaps(True)
@@ -169,6 +195,16 @@ class PrctlTest(unittest.TestCase):
         self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_LATE)
         prctl.set_mce_kill(prctl.MCE_KILL_DEFAULT)
         self.assertEqual(prctl.get_mce_kill(), prctl.MCE_KILL_DEFAULT)
+
+    @require('mpx_enable_management')
+    def test_mpx(self):
+       """Test MPX enabling/disabling"""
+       if os.uname().release > "5.4":
+          self.assertRaises(OSError, prctl.mpx_enable_management)
+          self.assertRaises(OSError, prctl.mpx_disable_management)
+       else:
+          self.assertEqual(prctl.mpx_enable_management(), None)
+          self.assertEqual(prctl.mpx_disable_management(), None)
 
     def test_name(self):
         """Test setting the process name"""
@@ -194,6 +230,15 @@ class PrctlTest(unittest.TestCase):
                 sp.communicate()
                 self.assertNotEqual(sp.returncode, 0)
             os._exit(0)
+
+    @require('pac_reset_keys')
+    def test_pac_reset_keys(self):
+        if self.arch == 'arm64':
+            # FIXME untested
+            self.assertEqual(prctl.pac_reset_keys(prctl.PAC_APIAKEY), None)
+            self.assertRaises(ValueError, prctl.pac_reset_keys, 0xff)
+        else:
+            self.assertRaises(OSError, prctl.pac_reset_keys, prctl.PAC_APIAKEY)
 
     def test_proctitle(self):
         """Test setting the process title, including too long titles"""
@@ -276,6 +321,30 @@ class PrctlTest(unittest.TestCase):
             def set_true():
                 prctl.securebits.noroot = True
             self.assertRaises(OSError, set_true)
+
+    @require('set_speculation_ctrl')
+    def test_speculation_ctrl(self):
+       self.assertTrue(prctl.get_speculation_ctrl(prctl.SPEC_STORE_BYPASS) > 0)
+       self.assertTrue(prctl.get_speculation_ctrl(prctl.SPEC_INDIRECT_BRANCH) > 0)
+       self.assertRaises(ValueError, prctl.get_speculation_ctrl, 99)
+       self.assertRaises(ValueError, prctl.set_speculation_ctrl, 99)
+       prctl.set_speculation_ctrl(prctl.SPEC_STORE_BYPASS, prctl.SPEC_ENABLE)
+       self.assertEqual(prctl.get_speculation_ctrl(prctl.SPEC_STORE_BYPASS) & ~prctl.SPEC_PRCTL, prctl.SPEC_ENABLE)
+       prctl.set_speculation_ctrl(prctl.SPEC_STORE_BYPASS, prctl.SPEC_FORCE_DISABLE)
+       self.assertRaises(PermissionError, prctl.set_speculation_ctrl, prctl.SPEC_STORE_BYPASS, prctl.SPEC_ENABLE)
+
+    @require('task_perf_events_enable')
+    def test_task_perf_events(self):
+        prctl.task_perf_events_disable()
+        prctl.task_perf_events_enable()
+
+    @require('get_thp_disable')
+    def test_thp_disable(self):
+        self.assertEqual(prctl.get_thp_disable(), False)
+        prctl.set_thp_disable(True)
+        self.assertEqual(prctl.get_thp_disable(), True)
+        prctl.set_thp_disable(False)
+        self.assertEqual(prctl.get_thp_disable(), False)
 
     @require('get_timerslack')
     def test_timerslack(self):
