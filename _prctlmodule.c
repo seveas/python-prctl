@@ -716,10 +716,16 @@ PyInit__prctl(void)
     namedconstant(CAP_PERMITTED);
     namedconstant(CAP_INHERITABLE);
     namedconstant(CAP_AUDIT_CONTROL);
+#ifdef CAP_AUDIT_READ
     namedconstant(CAP_AUDIT_READ);
+#endif
     namedconstant(CAP_AUDIT_WRITE);
+#ifdef CAP_BLOCK_SUSPEND
     namedconstant(CAP_BLOCK_SUSPEND);
+#endif
+#ifdef CAP_BPF
     namedconstant(CAP_BPF);
+#endif
     namedconstant(CAP_CHOWN);
     namedconstant(CAP_DAC_OVERRIDE);
     namedconstant(CAP_DAC_READ_SEARCH);
@@ -741,7 +747,9 @@ PyInit__prctl(void)
     namedconstant(CAP_NET_BIND_SERVICE);
     namedconstant(CAP_NET_BROADCAST);
     namedconstant(CAP_NET_RAW);
+#ifdef CAP_PERFMON
     namedconstant(CAP_PERFMON);
+#endif
 #ifdef CAP_SETFCAP
     namedconstant(CAP_SETFCAP);
 #endif
