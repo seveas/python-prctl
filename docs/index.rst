@@ -450,9 +450,23 @@ These are the attributes (:class:`set` refers to each of the above objects):
   Enable and disable kernel auditing; change auditing filter rules; retrieve
   auditing status and filtering rules.
 
+.. attribute:: set.audit_read
+
+  Allow reading the audit log via a multicast netlink socket.
+
 .. attribute:: set.audit_write
 
   Write records to kernel auditing log.
+
+.. attribute:: set.block_suspend
+
+  Employ features that can block system suspend (:manpage:`epoll(7)`
+  :const:`EPOLLWAKEUP`, :file:`/proc/sys/wake_lock`).
+
+.. attribute:: set.bpf
+
+  Employ privileged BPF operations; see :manpage:`bpf(2)` and
+  :manpage:`bpf-helpers(7)`.
 
 .. attribute:: set.chown
 
@@ -510,14 +524,12 @@ These are the attributes (:class:`set` refers to each of the above objects):
 
 .. attribute:: set.mac_admin
 
-  Override Mandatory Access Control (MAC). Implemented for the Smack Linux
-  Security Module (LSM).
+  Allow MAC configuration or state changes. Implemented for the Smack LSM.
 
 .. attribute:: set.mac_override
 
-  Allow MAC configuration or state changes. Implemented for the Smack LSM.
-
-.. The above two were copied from the manpage, but they seem to be swapped. Hmm...
+  Override Mandatory Access Control (MAC). Implemented for the Smack Linux
+  Security Module (LSM).
 
 .. attribute:: set.mknod
 
@@ -541,6 +553,12 @@ These are the attributes (:class:`set` refers to each of the above objects):
 .. attribute:: set.net_raw
 
   Use :const:`RAW` and :const:`PACKET` sockets.
+
+.. attribute:: set.perfmon
+
+  Employ various performance-monitoring mechanisms, including
+  :func:`perf_event_open` and various BPF operations that have performance
+  implications..
 
 .. attribute:: set.setgid
 
@@ -579,23 +597,8 @@ These are the attributes (:class:`set` refers to each of the above objects):
 
 .. attribute:: set.sys_admin
 
-  * Perform a range of system administration operations including:
-    :func:`quotactl`, func:`mount`, :func:`umount`, :func:`swapon`,
-    :func:`swapoff`, :func:`sethostname`, and :func:`setdomainname`.
-  * Perform :const:`IPC_SET` and :const:`IPC_RMID` operations on arbitrary
-    System V IPC objects.
-  * Perform operations on trusted and security Extended Attributes (see
-    :manpage:`attr(5)`).
-  * Use :func:`lookup_dcookie`.
-  * Use :func:`ioprio_set` to assign the :const:`IOPRIO_CLASS_RT` scheduling
-    class.
-  * Forge UID when passing socket credentials.
-  * Exceed :file:`/proc/sys/fs/file-max`, the system-wide limit on the number
-    of open files, in system calls that open files (e.g., :func:`accept`,
-    :func:`execve`, :func:`open`, :func:`pipe`).
-  * Employ :const:`CLONE_NEWNS` flag with :func:`clone` and :func:`unshare`.
-  * Perform :const:`KEYCTL_CHOWN` and :const:`KEYCTL_SETPERM` :func:`keyctl`
-    operations.
+  Perform a range of system administration operations, which change per kernel
+  version. See :manpage:`capabilities(7)` for details.
 
 .. attribute:: set.sys_boot
 
@@ -636,19 +639,13 @@ These are the attributes (:class:`set` refers to each of the above objects):
 
 .. attribute:: set.sys_rawio
 
-  Perform I/O port operations (:func:`iopl` and :func:`ioperm`); access
-  :file:`/proc/kcore`.
+  Perform a range of privileged i/o operations, which change per kernel
+  version. See :manpage:`capabilities(7)` for details.
 
 .. attribute:: set.sys_resource
 
-  * Use reserved space on ext2 file systems.
-  * Make :func:`ioctl` calls controlling ext3 journaling.
-  * Override disk quota limits.
-  * Increase resource limits (see :manpage:`setrlimit(2)`).
-  * Override :const:`RLIMIT_NPROC` resource limit.
-  * Raise :c:data:`msg_qbytes` limit for a System V message queue above the
-    limit in :file:`/proc/sys/kernel/msgmnb` (see :manpage:`msgop(2)` and
-    :manpage:`msgctl(2)`).
+  Use a set of privileged resources, which change per kernel version. See
+  :manpage:`capabilities(7)` for details.
 
 .. attribute:: set.sys_time
 
