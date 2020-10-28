@@ -15,7 +15,7 @@ import unittest
 so = '.so'
 try:
     import sysconfig
-    so = sysconfig.get_config_var('SO')
+    so = sysconfig.get_config_var('EXT_SUFFIX')
 except ImportError:
     pass
 
