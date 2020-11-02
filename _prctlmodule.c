@@ -177,7 +177,11 @@ prctl_prctl(PyObject *self, PyObject *args)
 #endif
 #ifdef PR_GET_SPECULATION_CTRL
         case(PR_SET_SPECULATION_CTRL):
+#ifdef PR_SPEC_INDIRECT_BRANCH
             if(arg != PR_SPEC_STORE_BYPASS && arg != PR_SPEC_INDIRECT_BRANCH) {
+#else
+            if(arg != PR_SPEC_STORE_BYPASS) {
+#endif
                 PyErr_SetString(PyExc_ValueError, "Invalid speculation control setting");
                 return NULL;
             }
@@ -193,7 +197,11 @@ prctl_prctl(PyObject *self, PyObject *args)
             }
             /* Intentionally not breaking */
         case(PR_GET_SPECULATION_CTRL):
+#ifdef PR_SPEC_INDIRECT_BRANCH
             if(arg != PR_SPEC_STORE_BYPASS && arg != PR_SPEC_INDIRECT_BRANCH) {
+#else
+            if(arg != PR_SPEC_STORE_BYPASS) {
+#endif
                 PyErr_SetString(PyExc_ValueError, "Invalid speculation control setting");
                 return NULL;
             }
@@ -793,7 +801,9 @@ PyInit__prctl(void)
 #ifdef PR_SET_SPECULATION_CTRL
     namedattribute(SPECULATION_CTRL);
     namedconstant(PR_SPEC_STORE_BYPASS);
+#ifdef PR_SPEC_INDIRECT_BRANCH
     namedconstant(PR_SPEC_INDIRECT_BRANCH);
+#endif
     namedconstant(PR_SPEC_PRCTL);
     namedconstant(PR_SPEC_ENABLE);
     namedconstant(PR_SPEC_DISABLE);
