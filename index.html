@@ -1,0 +1,1133 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to python-prctl’s documentation! &#8212; python-prctl 1.8.1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">python-prctl 1.8.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-python-prctl-s-documentation">
+<h1>Welcome to python-prctl’s documentation!<a class="headerlink" href="#welcome-to-python-prctl-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>The linux prctl function allows you to control specific characteristics of a
+process’ behaviour. Usage of the function is fairly messy though, due to
+limitations in C and linux. This module provides a nice non-messy python(ic)
+interface. Most of the text in this documentation is based on text from the
+linux manpages <em class="manpage">prctl(2)</em> and <em class="manpage">capabilities(7)</em></p>
+<p>Besides prctl, this library also wraps libcap for complete capability handling
+and allows you to set the process name as seen in ps and top.</p>
+<div class="section" id="downloading-and-installing">
+<h2>Downloading and installing<a class="headerlink" href="#downloading-and-installing" title="Permalink to this headline">¶</a></h2>
+<p>Before you try to install python-prctl, you will need to install the following:</p>
+<ul class="simple">
+<li><p>gcc</p></li>
+<li><p>libc development headers</p></li>
+<li><p>libcap development headers</p></li>
+</ul>
+<p>On Debian and Ubuntu, this is done as follows:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ sudo apt-get install build-essential libcap-dev
+</pre></div>
+</div>
+<p>On Fedora and other RPM-based distributions:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ sudo yum install gcc glibc-devel libcap-devel
+</pre></div>
+</div>
+<p>The latest stable version can be installed with distutils:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ sudo easy_install python-prctl
+</pre></div>
+</div>
+<p>The latest development source for python-prctl can be downloaded from <a class="reference external" href="http://github.com/seveas/python-prctl">GitHub</a>. Installing is again done with distutils.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ git clone http://github.com/seveas/python-prctl
+$ <span class="nb">cd</span> python-prctl
+$ python setup.py build
+$ sudo python setup.py install
+</pre></div>
+</div>
+<p>The prctl module is now ready to use.</p>
+</div>
+<div class="section" id="module-prctl">
+<span id="prctl-control-process-attributes"></span><h2><a class="reference internal" href="#module-prctl" title="prctl: Control process attributes (Linux (2.6.25 or newer))"><code class="xref py py-mod docutils literal notranslate"><span class="pre">prctl</span></code></a> – Control process attributes<a class="headerlink" href="#module-prctl" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="prctl.set_child_subreaper">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_child_subreaper</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_child_subreaper" title="Permalink to this definition">¶</a></dt>
+<dd><p>When processes double-fork, they get implicitly re-parented to PID 1. Using
+this function, processes can mark themselves as service manager and will
+remain parent of any such processes they launch, becoming a sort of sub-init.
+They will then be responsible for handling <code class="xref py py-const docutils literal notranslate"><span class="pre">SIGCHLD</span></code> and
+calling <code class="xref py py-func docutils literal notranslate"><span class="pre">wait()</span></code> in them.</p>
+<p>This is only available in linux 3.4 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_child_subreaper">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_child_subreaper</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_child_subreaper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether we are a sub-init.</p>
+<p>This is only available in linux 3.4 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_dumpable">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_dumpable</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_dumpable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the state of the flag determining whether core dumps are produced for
+this process upon delivery of a signal whose default behavior is to produce a
+core dump. (Normally this flag is set for a process by default, but it is
+cleared when a set-user-ID or set-group-ID program is executed and also by
+various system calls that manipulate process UIDs and GIDs).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_dumpable">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_dumpable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_dumpable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the state of the dumpable flag.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_endian">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_endian</code><span class="sig-paren">(</span><em class="sig-param">endianness</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_endian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the endian-ness of the calling process. Valid values are
+<code class="xref py py-const docutils literal notranslate"><span class="pre">ENDIAN_BIG</span></code>, <code class="xref py py-const docutils literal notranslate"><span class="pre">ENDIAN_LITTLE</span></code> and
+<code class="xref py py-const docutils literal notranslate"><span class="pre">ENDIAN_PPC_LITTLE</span></code> (PowerPC pseudo little endian).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function only works on PowerPC systems. An <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> is raised
+when called on other systems.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_endian">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_endian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_endian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the endian-ness of the calling process, see <a class="reference internal" href="#prctl.set_endian" title="prctl.set_endian"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_endian()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_fpemu">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_fpemu</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_fpemu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set floating-point emulation control flag. Pass <code class="xref py py-const docutils literal notranslate"><span class="pre">FPEMU_NOPRINT</span></code>
+to silently emulate fp operations accesses, or <code class="xref py py-const docutils literal notranslate"><span class="pre">FPEMU_SIGFPE</span></code>
+to not emulate fp operations and send <code class="xref py py-const docutils literal notranslate"><span class="pre">SIGFPE</span></code> instead.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function only works on ia64 systems. An <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> is raised
+when called on other systems.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_fpemu">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_fpemu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_fpemu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get floating-point emulation control flag. See <a class="reference internal" href="#prctl.set_fpemu" title="prctl.set_fpemu"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_fpemu()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_fpexc">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_fpexc</code><span class="sig-paren">(</span><em class="sig-param">mode</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_fpexc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set floating-point exception mode. Pass <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_SW_ENABLE</span></code> to use
+FPEXC for FP exception, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_DIV</span></code> for floating-point divide by
+zero, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_OVF</span></code> for floating-point overflow, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_UND</span></code>
+for floating-point underflow, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_RES</span></code> for floating-point inexact
+result, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_INV</span></code> for floating-point invalid operation,
+<code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_DISABLED</span></code> for FP exceptions disabled, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_NONRECOV</span></code>
+for async non-recoverable exception mode, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_ASYNC</span></code> for async
+recoverable exception mode, <code class="xref py py-const docutils literal notranslate"><span class="pre">FP_EXC_PRECISE</span></code> for precise exception
+mode. Modes can be combined with the <code class="xref py py-const docutils literal notranslate"><span class="pre">|</span></code> operator.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function only works on PowerPC systems. An <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> is raised
+when called on other systems.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_fpexc">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_fpexc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_fpexc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the floating-point exception mode as a bitmap of enabled modes. See
+<a class="reference internal" href="#prctl.set_fpexc" title="prctl.set_fpexc"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_fpexc()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_io_flusher">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_io_flusher</code><span class="sig-paren">(</span><em class="sig-param">is_flusher</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_io_flusher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put the process in <code class="xref py py-const docutils literal notranslate"><span class="pre">IO_FLUSHER</span></code> state, which, which allows it special
+treatment to make progress when allocating memory. This is used by process
+involved in the block layer or filesystem i/o path, such as fuse daemons or
+scsi device emulation daemons.</p>
+<p>This is only available in linux 5.6 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_io_flusher">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_io_flusher</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_io_flusher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="xref py py-const docutils literal notranslate"><span class="pre">IO_FLUSHER</span></code> state of the process.</p>
+<p>This is only available in linux 5.6 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_keepcaps">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_keepcaps</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_keepcaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the state of the thread’s “keep capabilities” flag, which determines
+whether the thread’s effective and permitted capability sets are cleared
+when a change is made to the thread’s user IDs such that the thread’s real
+UID, effective UID, and saved set-user-ID all become non-zero when at least
+one of them previously had the value 0. (By default, these credential sets
+are cleared). This value will be reset to <code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code> on subsequent calls
+to <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_keepcaps">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_keepcaps</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_keepcaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current state of the calling thread’s “keep capabilities” flag.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_mce_kill">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_mce_kill</code><span class="sig-paren">(</span><em class="sig-param">policy</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_mce_kill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the machine check memory corruption kill policy for the current thread.
+The policy can be early kill (<code class="xref py py-const docutils literal notranslate"><span class="pre">MCE_KILL_EARLY</span></code>), late kill
+(<code class="xref py py-const docutils literal notranslate"><span class="pre">MCE_KILL_LATE</span></code>), or the system-wide default
+(<code class="xref py py-const docutils literal notranslate"><span class="pre">MCE_KILL_DEFAULT</span></code>).  Early kill means that the task receives a
+<code class="xref py py-const docutils literal notranslate"><span class="pre">SIGBUS</span></code> signal as soon as hardware memory corruption is detected
+inside its address space. In late kill mode, the process is only killed when
+it accesses a corrupted page.  The policy is inherited by children.  use the
+system-wide default. The system-wide default is defined by
+<code class="file docutils literal notranslate"><span class="pre">/proc/sys/vm/memory_failure_early_kill</span></code></p>
+<p>This is only available in linux 2.6.32 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_mce_kill">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_mce_kill</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_mce_kill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current per-process machine check kill policy.</p>
+<p>This is only available in linux 2.6.32 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.pr_mpx_enable_management">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">pr_mpx_enable_management</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.pr_mpx_enable_management" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="prctl.pr_mpx_disable_management">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">pr_mpx_disable_management</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.pr_mpx_disable_management" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable or disable intel memory protection extensions. See <em class="manpage">prctl(2)</em>
+for details and limitations.</p>
+<p>This is only available in linux 3.19 and newer, but no longer available in
+linux 5.4 and newer.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_name">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the process name for the calling process, the name can be up to 16 bytes
+long. This name is displayed in the output of <strong class="command">ps</strong> and
+<strong class="command">top</strong>. The initial value is the name of the executable. For python
+applications this will likely be <strong class="command">python</strong>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use <a class="reference internal" href="#prctl.set_proctitle" title="prctl.set_proctitle"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_proctitle()</span></code></a> to set the name that’s shown with <code class="xref py py-func docutils literal notranslate"><span class="pre">ps</span> <span class="pre">aux()</span></code>
+and <code class="xref py py-func docutils literal notranslate"><span class="pre">top</span> <span class="pre">-c()</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_name">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the (first 16 bytes of) the name for the calling process.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_no_new_privs">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_no_new_privs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_no_new_privs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once this is set, no operation that can grant new privileges (such as
+execve’ing a setuid binary) will actually grant new privileges.</p>
+<p>This is only available in linux 3.5 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_no_new_privs">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_no_new_privs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_no_new_privs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get whether new privileges can be granted to this pid.</p>
+<p>This is only available in linux 3.5 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.pac_reset_keys">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">pac_reset_keys</code><span class="sig-paren">(</span><em class="sig-param">keys</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.pac_reset_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Securely reset the thread’s pointer authentication keys to fresh random
+values generated by the kernel. The keys must be a logical or of any of the
+keys you want to reset, or 0 to reset all keys. The available keys are
+<code class="xref py py-const docutils literal notranslate"><span class="pre">PR_PAC_APIAKEY</span></code>, <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_PAC_APIBKEY</span></code>, <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_PAC_APDAKEY</span></code>,
+<code class="xref py py-const docutils literal notranslate"><span class="pre">PR_PAC_APDBKEY</span></code> and <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_PAC_APGAKEY</span></code>.</p>
+<p>For more information, see the kernel source file
+Documentation/arm64/pointer-authentication.rst</p>
+<p>This is only available in linux 5.0 and newer</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function only works on arm64 systems. An <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> is raised
+when called on other systems.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_proctitle">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_proctitle</code><span class="sig-paren">(</span><em class="sig-param">title</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_proctitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the process name for the calling process by overwriting the C-level
+<code class="xref c c-data docutils literal notranslate"><span class="pre">**argv</span></code> variable. The original value of <code class="xref c c-data docutils literal notranslate"><span class="pre">**argv</span></code> is then no
+longer visible. in <strong class="command">ps</strong>, <strong class="command">proc</strong>, or
+<code class="file docutils literal notranslate"><span class="pre">/proc/self/cmdline</span></code>.</p>
+<p>Names longer that what fits in <code class="xref c c-data docutils literal notranslate"><span class="pre">**argv</span></code> will be silently truncated. To
+set a longer title, make your application accept bogus arguments and call the
+application with these arguments.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is not actually part of the standard <code class="xref py py-func docutils literal notranslate"><span class="pre">pctrl()</span></code> syscall,
+but was added because it nicely complements <a class="reference internal" href="#prctl.set_name" title="prctl.set_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_name()</span></code></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_pdeathsig">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_pdeathsig</code><span class="sig-paren">(</span><em class="sig-param">signal</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_pdeathsig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parent death signal of the calling process (either a valid signal
+value from the <code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code> module, or 0 to clear). This is the signal that
+the calling process will get when its parent dies. This value is cleared for
+the child of a <code class="xref py py-func docutils literal notranslate"><span class="pre">fork()</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The “parent” in this case is considered to be the thread that created
+this process. In other words, the signal will be sent when that
+thread terminates (via, for example, <code class="xref py py-func docutils literal notranslate"><span class="pre">pthread_exit()</span></code>), rather than after all
+of the threads in the parent process terminate.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_pdeathsig">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_pdeathsig</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_pdeathsig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current value of the parent process death signal. See
+<a class="reference internal" href="#prctl.set_pdeathsig" title="prctl.set_pdeathsig"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_pdeathsig()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_ptracer">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_ptracer</code><span class="sig-paren">(</span><em class="sig-param">pid</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_ptracer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the top of the process tree that is allowed to use <code class="xref py py-func docutils literal notranslate"><span class="pre">PTRACE()</span></code> on the
+calling process, assuming other requirements are met (matching uid, wasn’t
+setuid, etc). Use pid 0 to disallow all processes. For more details, see
+<code class="file docutils literal notranslate"><span class="pre">/etc/sysctl.d/10-ptrace.conf</span></code>.</p>
+<p>This is only available in linux 3.4 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_ptracer">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_ptracer</code><span class="sig-paren">(</span><em class="sig-param">pid</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_ptracer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the top of the process tree that is allowed to use <code class="xref py py-func docutils literal notranslate"><span class="pre">PTRACE()</span></code> on
+the calling process. See <a class="reference internal" href="#prctl.set_ptracer" title="prctl.set_ptracer"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_ptracer()</span></code></a>.</p>
+<p>This is only available in linux 3.4 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_seccomp">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_seccomp</code><span class="sig-paren">(</span><em class="sig-param">mode</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_seccomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the secure computing mode for the calling thread. In the current
+implementation, mode must be <code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code>. After the secure computing mode
+has been set to <code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code>, the only system calls that the thread is
+permitted to make are <code class="xref py py-func docutils literal notranslate"><span class="pre">read()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">write()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">_exit()</span></code>, and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">sigreturn()</span></code>. Other system calls result in the delivery of a
+<code class="xref py py-const docutils literal notranslate"><span class="pre">SIGKILL</span></code> signal. Secure computing mode is useful for
+number-crunching applications that may need to execute untrusted byte code,
+perhaps obtained by reading from a pipe or socket. This operation is only
+available if the kernel is configured with <code class="xref py py-const docutils literal notranslate"><span class="pre">CONFIG_SECCOMP</span></code> enabled.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_seccomp">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_seccomp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_seccomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the secure computing mode of the calling thread. Not very useful for
+the current implementation, but may be useful for other possible future
+modes: if the caller is not in secure computing mode, this operation returns
+False; if the caller is in secure computing mode, then the <a class="reference internal" href="#module-prctl" title="prctl: Control process attributes (Linux (2.6.25 or newer))"><code class="xref py py-func docutils literal notranslate"><span class="pre">prctl()</span></code></a> call
+will cause a <code class="xref py py-const docutils literal notranslate"><span class="pre">SIGKILL</span></code> signal to be sent to the process. This
+operation is only available if the kernel is configured with
+<code class="xref py py-const docutils literal notranslate"><span class="pre">CONFIG_SECCOMP</span></code> enabled.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_speculation_ctrl">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_speculation_ctrl</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_speculation_ctrl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the state of a speculation misfeature (<code class="xref py py-const docutils literal notranslate"><span class="pre">SPEC_STORE_BYPASS</span></code> or
+<code class="xref py py-const docutils literal notranslate"><span class="pre">SPEC_INDIRECT_BRANCH</span></code>). The value is one of <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_SPEC_ENABLE</span></code>
+to enable the feature, <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_SPEC_DISABLE</span></code> to disable it,
+<code class="xref py py-const docutils literal notranslate"><span class="pre">PR_SPEC_FORCE_DISABLE</span></code> to disable it permanently for the thread and
+<code class="xref py py-const docutils literal notranslate"><span class="pre">PR_SPEC_DISABLE_NOEXEC</span></code> to disable it until the next <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>.</p>
+<p>This is only available in linux 4.17 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_speculation_ctrl">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_speculation_ctrl</code><span class="sig-paren">(</span><em class="sig-param">feature</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_speculation_ctrl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the state of a speculation misfeature (<code class="xref py py-const docutils literal notranslate"><span class="pre">SPEC_STORE_BYPASS</span></code> or
+<code class="xref py py-const docutils literal notranslate"><span class="pre">SPEC_INDIRECT_BRANCH</span></code>). The value is one of the values that can be
+set by <code class="xref py py-func docutils literal notranslate"><span class="pre">pr_set_speculation_ctrl()</span></code>, possibly logically OR’ed with
+const:<cite>PR_SPEC_PRCTL</cite> to indicate that the value can be controlled er thread
+by that function. If all bits are 0, the CPU is not affected by the
+misfeature.</p>
+<p>This is only available in linux 4.17 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.task_perf_events_disable">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">task_perf_events_disable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.task_perf_events_disable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="prctl.task_perf_events_enable">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">task_perf_events_enable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.task_perf_events_enable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable or enable all performance counters attached to the calling process,
+regardless of whether the counters were created by this process or another
+process. Performance counters created by the calling process for other
+processes are unaffected.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_thp_disable">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_thp_disable</code><span class="sig-paren">(</span><em class="sig-param">is_disabled</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_thp_disable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable transparent huge ages for the current process. This flag is inhereted
+by child process and preserved across execve.</p>
+<p>This is only available in linux 3.15 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_thp_disable">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_thp_disable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_thp_disable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether transparent huge pages are disabled for the current process.</p>
+<p>This is only available in linux 3.15 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_tid_address">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_tid_address</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_tid_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows the process to obtain its own <cite>clear_tid_address</cite>, used when
+checkpointing/restoring processes.</p>
+<p>This is only available in linux 3.5 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_timerslack">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_timerslack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_timerslack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Control the default “rounding” in nanoseconds that is used by <code class="xref py py-func docutils literal notranslate"><span class="pre">select()</span></code>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">poll()</span></code> and friends.</p>
+<p>The default value of the slack is 50 microseconds; this is significantly less
+than the kernels average timing error but still allows the kernel to group
+timers somewhat to preserve power behavior.</p>
+<p>This is only available in linux 2.6.28 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_timerslack">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_timerslack</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_timerslack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current timing slack, see <code class="xref py py-func docutils literal notranslate"><span class="pre">get_timing_slack()</span></code></p>
+<p>This is only available in linux 2.6.28 and newer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_timing">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_timing</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_timing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set whether to use (normal, traditional) statistical process timing or
+accurate timestamp based process timing, by passing
+<code class="xref py py-const docutils literal notranslate"><span class="pre">TIMING_STATISTICAL</span></code> or <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_TIMING_TIMESTAMP</span></code>.
+<code class="xref py py-const docutils literal notranslate"><span class="pre">TIMING_TIMESTAMP</span></code> is not currently implemented (attempting to
+set this mode will cause an <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_timing">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_timing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_timing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return which process timing method is currently in use.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_tsc">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_tsc</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_tsc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the state of the flag determining whether the timestamp counter can be
+read by the process. Pass <code class="xref py py-const docutils literal notranslate"><span class="pre">TSC_ENABLE</span></code> to allow it to be read,
+or <code class="xref py py-const docutils literal notranslate"><span class="pre">TSC_SIGSEGV</span></code> to generate a <code class="xref py py-const docutils literal notranslate"><span class="pre">SIGSEGV</span></code> when the
+process tries to read the timestamp counter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function only works on x86 systems. An <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> is raised when
+called on other systems.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_tsc">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_tsc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_tsc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the state of the flag determining whether the timestamp counter can be
+read, see <a class="reference internal" href="#prctl.set_tsc" title="prctl.set_tsc"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_tsc()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_unalign">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_unalign</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_unalign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set unaligned access control flag. Pass <code class="xref py py-const docutils literal notranslate"><span class="pre">UNALIGN_NOPRINT</span></code> to
+silently fix up unaligned user accesses, or <code class="xref py py-const docutils literal notranslate"><span class="pre">UNALIGN_SIGBUS</span></code> to
+generate <code class="xref py py-const docutils literal notranslate"><span class="pre">SIGBUS</span></code> on unaligned user access.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function only works on ia64, parisc, PowerPC and Alpha systems. An
+<code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> is raised when called on other systems.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_unalign">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_unalign</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_unalign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return unaligned access control bits, see <a class="reference internal" href="#prctl.set_unalign" title="prctl.set_unalign"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_unalign()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set_securebits">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">set_securebits</code><span class="sig-paren">(</span><em class="sig-param">bitmap</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set_securebits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the “securebits” flags of the calling thread.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is not recommended to use this function directly, use the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">securebits</span></code> object instead.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.get_securebits">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">get_securebits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.get_securebits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the “securebits” flags of the calling thread.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As with <a class="reference internal" href="#prctl.set_securebits" title="prctl.set_securebits"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_securebits()</span></code></a>, it is not recommended to use this function
+directly, use the <code class="xref py py-attr docutils literal notranslate"><span class="pre">securebits</span></code> object instead.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.capbset_read">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">capbset_read</code><span class="sig-paren">(</span><em class="sig-param">capability</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.capbset_read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether the specified capability is in the calling thread’s capability
+bounding set. The capability bounding set dictates whether the process can
+receive the capability through a file’s permitted capability set on a
+subsequent call to <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>. An <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> will be raised when an
+invalid capability is specified.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is not recommended to use this function directly, use the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">capbset</span></code> object instead.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.capbset_drop">
+<code class="sig-prename descclassname">prctl.</code><code class="sig-name descname">capbset_drop</code><span class="sig-paren">(</span><em class="sig-param">capability</em><span class="sig-paren">)</span><a class="headerlink" href="#prctl.capbset_drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the calling thread has the <code class="xref py py-const docutils literal notranslate"><span class="pre">CAP_SETPCAP</span></code> capability, then
+drop the specified capability specified by from  the  calling  thread’s
+capability bounding set. Any children of the calling thread will inherit the
+newly reduced bounding set.</p>
+<p>An <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code> will be raised if the calling thread does not have the
+<code class="xref py py-const docutils literal notranslate"><span class="pre">CAP_SETPCAP</span></code> capability or when the specified capability is
+invalid or when capabilities are not enabled in the kernel.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As with <a class="reference internal" href="#prctl.capbset_read" title="prctl.capbset_read"><code class="xref py py-func docutils literal notranslate"><span class="pre">capbset_read()</span></code></a>, it is not recommended to use this function
+directly, use the <code class="xref py py-attr docutils literal notranslate"><span class="pre">capbset</span></code> object instead.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="capabilities-and-the-capability-bounding-set">
+<h2>Capabilities and the capability bounding set<a class="headerlink" href="#capabilities-and-the-capability-bounding-set" title="Permalink to this headline">¶</a></h2>
+<p>For the purpose of performing permission checks, traditional Unix
+implementations distinguish two categories of processes: privileged processes
+(whose effective user ID is 0, referred to as superuser or root), and
+unprivileged processes (whose effective UID is non-zero). Privileged processes
+bypass all kernel permission checks, while unprivileged processes are subject
+to full permission checking based on the process’s credentials (usually:
+effective UID, effective GID, and supplementary group list).</p>
+<p>Starting with kernel 2.2, Linux divides the privileges traditionally associated
+with superuser into distinct units, known as capabilities, which can be
+independently enabled and disabled. Capabilities are a per-thread attribute.</p>
+<p>Each thread has three capability sets containing zero or  more  of  the
+capabilities described below</p>
+<dl>
+<dt>Permitted (the <code class="xref py py-attr docutils literal notranslate"><span class="pre">cap_permitted</span></code> object):</dt><dd><p>This is a limiting superset for the effective capabilities that the thread
+may assume. It is also a limiting superset for the capabilities that may be
+added to the inheritable set by a thread that does not have the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">setpcap</span></code> capability in its effective set.</p>
+<p>If a thread drops a capability from its permitted set, it can never
+re-acquire that capability (unless it <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code> s either a
+set-user-ID-root program, or a program whose associated file capabilities
+grant that capability).</p>
+</dd>
+<dt>Inheritable (the <code class="xref py py-attr docutils literal notranslate"><span class="pre">cap_inheritable</span></code> object):</dt><dd><p>This is a set of capabilities preserved across an <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>. It provides
+a mechanism for a process to assign capabilities to the permitted set of the
+new program during an <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>.</p>
+</dd>
+<dt>Effective (the <code class="xref py py-attr docutils literal notranslate"><span class="pre">cap_effective</span></code> object):</dt><dd><p>This is the set of capabilities used by the kernel to perform permission
+checks for the thread.</p>
+</dd>
+</dl>
+<p>A child created via <code class="xref py py-func docutils literal notranslate"><span class="pre">fork()</span></code> inherits copies of its parent’s capability
+sets. See below for a discussion of the treatment of capabilities during
+<code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>.</p>
+<p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">capbset</span></code> object represents the current capability bounding
+set of the process. The capability bounding set dictates whether the process
+can receive the capability through a file’s permitted capability set on a
+subsequent call to <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>. All attributes of <code class="xref py py-attr docutils literal notranslate"><span class="pre">capbset</span></code> are
+<code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code> by default, unless a parent process already removed them from the
+bounding set.</p>
+<p>These four objects have a number of attributes, all of which are properties.
+For the capability bounding set and the effective capabilities, these can only
+be set to <code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code>, this drops them from the corresponding set.</p>
+<p>All details about capabilities and capability bounding sets can be found in the
+<em class="manpage">capabilities(7)</em> manpage, on which most text below is based.</p>
+<p>These are the attributes (<code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code> refers to each of the above objects):</p>
+<dl class="attribute">
+<dt id="prctl.set.audit_control">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">audit_control</code><a class="headerlink" href="#prctl.set.audit_control" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable and disable kernel auditing; change auditing filter rules; retrieve
+auditing status and filtering rules.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.audit_read">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">audit_read</code><a class="headerlink" href="#prctl.set.audit_read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow reading the audit log via a multicast netlink socket.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.audit_write">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">audit_write</code><a class="headerlink" href="#prctl.set.audit_write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write records to kernel auditing log.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.block_suspend">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">block_suspend</code><a class="headerlink" href="#prctl.set.block_suspend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Employ features that can block system suspend (<em class="manpage">epoll(7)</em>
+<code class="xref py py-const docutils literal notranslate"><span class="pre">EPOLLWAKEUP</span></code>, <code class="file docutils literal notranslate"><span class="pre">/proc/sys/wake_lock</span></code>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.bpf">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">bpf</code><a class="headerlink" href="#prctl.set.bpf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Employ privileged BPF operations; see <em class="manpage">bpf(2)</em> and
+<em class="manpage">bpf-helpers(7)</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.chown">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">chown</code><a class="headerlink" href="#prctl.set.chown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make arbitrary changes to file UIDs and GIDs (see <em class="manpage">chown(2)</em>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.dac_override">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">dac_override</code><a class="headerlink" href="#prctl.set.dac_override" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bypass file read, write, and execute permission checks.  (DAC is an
+abbreviation of “discretionary access control”.)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.dac_read_search">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">dac_read_search</code><a class="headerlink" href="#prctl.set.dac_read_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bypass file read permission checks and directory read and execute permission
+checks.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.fowner">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">fowner</code><a class="headerlink" href="#prctl.set.fowner" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li><p>Bypass  permission  checks  on  operations  that  normally require the file
+system UID of the process to match the UID of the file (e.g.,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">chmod()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">utime()</span></code>), excluding those operations covered by
+<a class="reference internal" href="#prctl.set.dac_override" title="prctl.set.dac_override"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dac_override</span></code></a> and <a class="reference internal" href="#prctl.set.dac_read_search" title="prctl.set.dac_read_search"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dac_read_search</span></code></a>.</p></li>
+<li><p>Set extended file attributes (see <em class="manpage">chattr(1)</em>) on arbitrary files.</p></li>
+<li><p>Set Access Control Lists (ACLs) on arbitrary files.</p></li>
+<li><p>Ignore directory sticky bit on file deletion.</p></li>
+<li><p>Specify <code class="xref py py-const docutils literal notranslate"><span class="pre">O_NOATIME</span></code> for arbitrary files in <code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">fcntl()</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.fsetid">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">fsetid</code><a class="headerlink" href="#prctl.set.fsetid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Don’t clear set-user-ID and set-group-ID permission bits when a file is
+modified; set the set-group-ID bit for a file whose  GID  does  not match the
+file system or any of the supplementary GIDs of the calling process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.ipc_lock">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">ipc_lock</code><a class="headerlink" href="#prctl.set.ipc_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lock memory (<code class="xref py py-func docutils literal notranslate"><span class="pre">mlock()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">mlockall()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">mmap()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">shmctl()</span></code>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.ipc_owner">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">ipc_owner</code><a class="headerlink" href="#prctl.set.ipc_owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bypass permission checks for operations on System V IPC objects.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.kill">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">kill</code><a class="headerlink" href="#prctl.set.kill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bypass permission checks for sending signals (see <em class="manpage">kill(2)</em>). This
+includes use of the <code class="xref py py-func docutils literal notranslate"><span class="pre">ioctl()</span></code> <code class="xref py py-const docutils literal notranslate"><span class="pre">KDSIGACCEPT</span></code> operation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.lease">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">lease</code><a class="headerlink" href="#prctl.set.lease" title="Permalink to this definition">¶</a></dt>
+<dd><p>Establish leases on arbitrary files (see <em class="manpage">fcntl(2)</em>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.linux_immutable">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">linux_immutable</code><a class="headerlink" href="#prctl.set.linux_immutable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the <code class="xref py py-const docutils literal notranslate"><span class="pre">FS_APPEND_FL</span></code> and <code class="xref py py-const docutils literal notranslate"><span class="pre">FS_IMMUTABLE_FL</span></code> i-node flags (see
+<em class="manpage">chattr(1)</em>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.mac_admin">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">mac_admin</code><a class="headerlink" href="#prctl.set.mac_admin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow MAC configuration or state changes. Implemented for the Smack LSM.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.mac_override">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">mac_override</code><a class="headerlink" href="#prctl.set.mac_override" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override Mandatory Access Control (MAC). Implemented for the Smack Linux
+Security Module (LSM).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.mknod">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">mknod</code><a class="headerlink" href="#prctl.set.mknod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create special files using <a class="reference internal" href="#prctl.set.mknod" title="prctl.set.mknod"><code class="xref py py-func docutils literal notranslate"><span class="pre">mknod()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.net_admin">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">net_admin</code><a class="headerlink" href="#prctl.set.net_admin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform various network-related operations (e.g., setting privileged socket
+options, enabling multicasting, interface configuration, modifying routing
+tables).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.net_bind_service">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">net_bind_service</code><a class="headerlink" href="#prctl.set.net_bind_service" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind a socket to Internet domain privileged ports (port numbers less than
+1024).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.net_broadcast">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">net_broadcast</code><a class="headerlink" href="#prctl.set.net_broadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Unused) Make socket broadcasts, and listen to multicasts.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.net_raw">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">net_raw</code><a class="headerlink" href="#prctl.set.net_raw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use <code class="xref py py-const docutils literal notranslate"><span class="pre">RAW</span></code> and <code class="xref py py-const docutils literal notranslate"><span class="pre">PACKET</span></code> sockets.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.perfmon">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">perfmon</code><a class="headerlink" href="#prctl.set.perfmon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Employ various performance-monitoring mechanisms, including
+<code class="xref py py-func docutils literal notranslate"><span class="pre">perf_event_open()</span></code> and various BPF operations that have performance
+implications..</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.setgid">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">setgid</code><a class="headerlink" href="#prctl.set.setgid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make arbitrary manipulations of process GIDs and supplementary GID list;
+forge GID when passing socket credentials via Unix domain sockets.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.setfcap">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">setfcap</code><a class="headerlink" href="#prctl.set.setfcap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set file capabilities.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.setpcap">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">setpcap</code><a class="headerlink" href="#prctl.set.setpcap" title="Permalink to this definition">¶</a></dt>
+<dd><p>If file capabilities are not supported: grant or remove any capability in the
+caller’s permitted capability set to or from any other process. (This
+property of <a class="reference internal" href="#prctl.set.setpcap" title="prctl.set.setpcap"><code class="xref py py-attr docutils literal notranslate"><span class="pre">setpcap</span></code></a> is not available when the kernel is configured to
+support file capabilities, since <a class="reference internal" href="#prctl.set.setpcap" title="prctl.set.setpcap"><code class="xref py py-attr docutils literal notranslate"><span class="pre">setpcap</span></code></a> has entirely different
+semantics for such kernels.)</p>
+<p>If file capabilities are supported: add any capability from the calling
+thread’s bounding set to its  inheritable  set;  drop  capabilities from the
+bounding set (via <a class="reference internal" href="#prctl.capbset_drop" title="prctl.capbset_drop"><code class="xref py py-func docutils literal notranslate"><span class="pre">capbset_drop()</span></code></a>); make changes to the
+securebits flags.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.setuid">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">setuid</code><a class="headerlink" href="#prctl.set.setuid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make arbitrary manipulations of process UIDs (<a class="reference internal" href="#prctl.set.setuid" title="prctl.set.setuid"><code class="xref py py-func docutils literal notranslate"><span class="pre">setuid()</span></code></a>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">setreuid()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">setresuid()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">setfsuid()</span></code>); make forged UID when
+passing socket credentials via Unix domain sockets.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.syslog">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">syslog</code><a class="headerlink" href="#prctl.set.syslog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow configuring the kernel’s syslog (printk behaviour). Before linux 2.6.38
+the <a class="reference internal" href="#prctl.set.sys_admin" title="prctl.set.sys_admin"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sys_admin</span></code></a> capability was needed for this.</p>
+<p>This is only available in linux 2.6.38 and newer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_admin">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_admin</code><a class="headerlink" href="#prctl.set.sys_admin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a range of system administration operations, which change per kernel
+version. See <em class="manpage">capabilities(7)</em> for details.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_boot">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_boot</code><a class="headerlink" href="#prctl.set.sys_boot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">reboot()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">kexec_load()</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_chroot">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_chroot</code><a class="headerlink" href="#prctl.set.sys_chroot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">chroot()</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_module">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_module</code><a class="headerlink" href="#prctl.set.sys_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load and unload kernel modules (see <em class="manpage">init_module(2)</em> and
+<em class="manpage">delete_module(2)</em>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_nice">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_nice</code><a class="headerlink" href="#prctl.set.sys_nice" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li><p>Raise process nice value (<code class="xref py py-func docutils literal notranslate"><span class="pre">nice()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">setpriority()</span></code>) and change the
+nice value for arbitrary processes.</p></li>
+<li><p>Set real-time scheduling policies for calling process, and set scheduling
+policies and priorities for arbitrary processes
+(<code class="xref py py-func docutils literal notranslate"><span class="pre">sched_setscheduler()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">sched_setparam()</span></code>).</p></li>
+<li><p>Set CPU affinity for arbitrary processes (<code class="xref py py-func docutils literal notranslate"><span class="pre">sched_setaffinity()</span></code>)</p></li>
+<li><p>Set I/O scheduling class and priority for arbitrary processes
+(<code class="xref py py-func docutils literal notranslate"><span class="pre">ioprio_set()</span></code>).</p></li>
+<li><p>Apply <code class="xref py py-func docutils literal notranslate"><span class="pre">migrate_pages()</span></code> to arbitrary processes and allow processes to
+be migrated to arbitrary nodes.</p></li>
+<li><p>Apply <code class="xref py py-func docutils literal notranslate"><span class="pre">move_pages()</span></code> to arbitrary processes.</p></li>
+<li><p>Use the <code class="xref py py-const docutils literal notranslate"><span class="pre">MPOL_MF_MOVE_ALL</span></code> flag with <code class="xref py py-func docutils literal notranslate"><span class="pre">mbind()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">move_pages()</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_pacct">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_pacct</code><a class="headerlink" href="#prctl.set.sys_pacct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">acct()</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_ptrace">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_ptrace</code><a class="headerlink" href="#prctl.set.sys_ptrace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trace arbitrary processes using <code class="xref py py-func docutils literal notranslate"><span class="pre">ptrace()</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_rawio">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_rawio</code><a class="headerlink" href="#prctl.set.sys_rawio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a range of privileged i/o operations, which change per kernel
+version. See <em class="manpage">capabilities(7)</em> for details.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_resource">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_resource</code><a class="headerlink" href="#prctl.set.sys_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use a set of privileged resources, which change per kernel version. See
+<em class="manpage">capabilities(7)</em> for details.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_time">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_time</code><a class="headerlink" href="#prctl.set.sys_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set system clock (<code class="xref py py-func docutils literal notranslate"><span class="pre">settimeofday()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">stime()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">adjtimex()</span></code>); set
+real-time (hardware) clock.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.sys_tty_config">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">sys_tty_config</code><a class="headerlink" href="#prctl.set.sys_tty_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">vhangup()</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.set.wake_alarm">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">wake_alarm</code><a class="headerlink" href="#prctl.set.wake_alarm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow triggering something that will wake the system.</p>
+<p>This is only available in linux 3.0 and newer</p>
+</dd></dl>
+
+<p>The four capabilities objects also have two additional methods, to make
+dropping many capabilities at the same time easier:</p>
+<dl class="function">
+<dt id="prctl.set.drop">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">drop</code><span class="sig-paren">(</span><em class="sig-param">cap</em><span class="optional">[</span>, <em class="sig-param">...</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set.drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop all capabilities given as arguments from the set.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="prctl.set.limit">
+<code class="sig-prename descclassname">set.</code><code class="sig-name descname">limit</code><span class="sig-paren">(</span><em class="sig-param">cap</em><span class="optional">[</span>, <em class="sig-param">...</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#prctl.set.limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop all but the given capabilities from the set.</p>
+</dd></dl>
+
+<p>These function accept both names of capabilities as given above and the
+<code class="xref py py-data docutils literal notranslate"><span class="pre">CAP_</span></code> constants as defined in <code class="file docutils literal notranslate"><span class="pre">capabilities.h</span></code>. These constants
+are available as <code class="xref py py-attr docutils literal notranslate"><span class="pre">prctl.CAP_SYS_ADMIN</span></code> et cetera.</p>
+</div>
+<div class="section" id="capabilities-and-execve">
+<h2>Capabilities and <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code><a class="headerlink" href="#capabilities-and-execve" title="Permalink to this headline">¶</a></h2>
+<p>During an <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>, the kernel calculates the new capabilities of the process
+using the following algorithm:</p>
+<ul class="simple">
+<li><p>P’(permitted) = (P(inheritable) &amp; F(inheritable)) | (F(permitted) &amp; cap_bset)</p></li>
+<li><p>P’(effective) = F(effective) ? P’(permitted) : 0</p></li>
+<li><p>P’(inheritable) = P(inheritable) [i.e., unchanged]</p></li>
+</ul>
+<p>Where:</p>
+<ul class="simple">
+<li><p>P denotes the value of a thread capability set before the <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code></p></li>
+<li><p>P’ denotes the value of a capability set after the <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code></p></li>
+<li><p>F denotes a file capability set</p></li>
+<li><p>cap_bset is the value of the capability bounding set</p></li>
+</ul>
+<p>The downside of this is that you need to set file capabilities if you want to
+make applications capabilities-friendly via wrappers. For instance, to allow an
+http daemon to listen on port 80 without it needing root privileges, you could
+do the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">prctl</span><span class="o">.</span><span class="n">cap_inheritable</span><span class="o">.</span><span class="n">net_bind_service</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">os</span><span class="o">.</span><span class="n">setuid</span><span class="p">(</span><span class="n">pwd</span><span class="o">.</span><span class="n">getpwnam</span><span class="p">(</span><span class="s1">&#39;www-data&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pw_uid</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">execve</span><span class="p">(</span><span class="s2">&quot;/usr/sbin/httpd&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;/usr/sbin/httpd&quot;</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This only works if <code class="file docutils literal notranslate"><span class="pre">/usr/sbin/httpd</span></code> has <code class="xref py py-attr docutils literal notranslate"><span class="pre">CAP_NET_BIND_SOCK</span></code> in its
+inheritable and effective sets. You can do this with the <strong class="command">setcap</strong> tool
+shipped with libcap.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ sudo setcap <span class="nv">cap_net_bind_service</span><span class="o">=</span>ie /usr/sbin/httpd
+$ getcap /usr/sbin/httpd
+/usr/sbin/httpd <span class="o">=</span> cap_net_bind_service+ei
+</pre></div>
+</div>
+<p>Note that it only sets the capability in the inheritable set, so this
+capability is only granted if the program calling execve has it in its
+inheritable set too. The effective set of file capabilities does not exist in
+linux, it is a single bit that specifies whether capabilities in the permitted
+set are automatically raised in the effective set upon <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>.</p>
+</div>
+<div class="section" id="establishing-a-capabilities-only-environment-with-securebits">
+<h2>Establishing a capabilities-only environment with securebits<a class="headerlink" href="#establishing-a-capabilities-only-environment-with-securebits" title="Permalink to this headline">¶</a></h2>
+<p>With a kernel in which file capabilities are enabled, Linux implements a set of
+per-thread securebits flags that can be used to disable special handling of
+capabilities for UID 0 (root). The securebits flags are inherited by child
+processes. During an <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>, all of the flags are preserved, except
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">keep_caps</span></code> which is always cleared.</p>
+<p>These capabilities are available via <a class="reference internal" href="#prctl.get_securebits" title="prctl.get_securebits"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_securebits()</span></code></a>, but are easier
+accessed via the <code class="xref py py-attr docutils literal notranslate"><span class="pre">securebits</span></code> object. This object has attributes
+tell you whether specific securebits are set, or unset.</p>
+<p>The following attributes are available:</p>
+<dl class="attribute">
+<dt id="prctl.securebits.keep_caps">
+<code class="sig-prename descclassname">securebits.</code><code class="sig-name descname">keep_caps</code><a class="headerlink" href="#prctl.securebits.keep_caps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting this flag allows a thread that has one or more 0 UIDs to retain its
+capabilities when it switches all of its UIDs to a non-zero value.  If this
+flag is not set, then such a UID switch causes the thread to lose all
+capabilities. This flag is always cleared on an <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.securebits.no_setuid_fixup">
+<code class="sig-prename descclassname">securebits.</code><code class="sig-name descname">no_setuid_fixup</code><a class="headerlink" href="#prctl.securebits.no_setuid_fixup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting this flag stops the kernel from adjusting capability sets when the
+thread’s effective and file system UIDs are switched between zero and
+non-zero values. (See the subsection Effect of User ID Changes on
+Capabilities in <em class="manpage">capabilities(7)</em>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.securebits.noroot">
+<code class="sig-prename descclassname">securebits.</code><code class="sig-name descname">noroot</code><a class="headerlink" href="#prctl.securebits.noroot" title="Permalink to this definition">¶</a></dt>
+<dd><p>If this bit is set, then the kernel does not grant capabilities when a
+set-user-ID-root program is executed, or when a process with an effective or
+real UID of 0 calls <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code>. (See the subsection Capabilities and
+execution of programs by root in <em class="manpage">capabilities(7)</em>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.securebits.keep_caps_locked">
+<code class="sig-prename descclassname">securebits.</code><code class="sig-name descname">keep_caps_locked</code><a class="headerlink" href="#prctl.securebits.keep_caps_locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#prctl.securebits.keep_caps" title="prctl.securebits.keep_caps"><code class="xref py py-attr docutils literal notranslate"><span class="pre">keep_caps</span></code></a>, but irreversible</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.securebits.no_setuid_fixup_locked">
+<code class="sig-prename descclassname">securebits.</code><code class="sig-name descname">no_setuid_fixup_locked</code><a class="headerlink" href="#prctl.securebits.no_setuid_fixup_locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#prctl.securebits.no_setuid_fixup" title="prctl.securebits.no_setuid_fixup"><code class="xref py py-attr docutils literal notranslate"><span class="pre">no_setuid_fixup</span></code></a>, but irreversible</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="prctl.securebits.noroot_locked">
+<code class="sig-prename descclassname">securebits.</code><code class="sig-name descname">noroot_locked</code><a class="headerlink" href="#prctl.securebits.noroot_locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#prctl.securebits.noroot" title="prctl.securebits.noroot"><code class="xref py py-attr docutils literal notranslate"><span class="pre">noroot</span></code></a>, but irreversible</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-_prctl">
+<span id="prctl-basic-c-wrapper-around-prctl"></span><h2><a class="reference internal" href="#module-_prctl" title="_prctl: Basic wrapper around prctl (Linux (2.6.25 or newer))"><code class="xref py py-mod docutils literal notranslate"><span class="pre">_prctl</span></code></a> – Basic C wrapper around prctl<a class="headerlink" href="#module-_prctl" title="Permalink to this headline">¶</a></h2>
+<p>This is the lower level C module that wraps the <code class="xref c c-func docutils literal notranslate"><span class="pre">prctl()</span></code> syscall in a way
+that it is easy to call from a python module. It should not be used directly,
+applications and other libraries should use the functionality provided by the
+<a class="reference internal" href="#module-prctl" title="prctl: Control process attributes (Linux (2.6.25 or newer))"><code class="xref py py-mod docutils literal notranslate"><span class="pre">prctl</span></code></a> module.</p>
+<p>This section of the documentation is meant for people who want to contribute to
+python-prctl.</p>
+<dl class="function">
+<dt id="c.prctl_prctl">
+static PyObject* <code class="sig-name descname">prctl_prctl</code><span class="sig-paren">(</span>PyObject<em> *self</em>, PyObject<em> *args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.prctl_prctl" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the <code class="xref c c-func docutils literal notranslate"><span class="pre">prctl()</span></code> wrapper. It accepts as argument either one or two
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code> variables or an <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code> and a <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>.</p>
+<p>The mandatory first int must be one of the <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_SET_*</span></code>,
+<code class="xref py py-const docutils literal notranslate"><span class="pre">PR_GET_*</span></code>, or <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_CAPBSET_*</span></code> constants defined in
+<code class="file docutils literal notranslate"><span class="pre">sys/prctl.h</span></code>. The accepted values of the second argument depend on the
+first argument, see <em class="manpage">prctl(2)</em>.</p>
+<p>The function validates arguments, calls <code class="xref c c-func docutils literal notranslate"><span class="pre">prctl()</span></code> in the
+argument-specific way and returns the proper value, whether <a class="reference internal" href="#module-prctl" title="prctl: Control process attributes (Linux (2.6.25 or newer))"><code class="xref py py-func docutils literal notranslate"><span class="pre">prctl()</span></code></a>
+returns it as return value or stores it in one of the parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.prctl_set_proctitle">
+static PyObject* <code class="sig-name descname">prctl_set_proctitle</code><span class="sig-paren">(</span>PyObject<em> *self</em>, PyObject<em> *args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.prctl_set_proctitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the process title by mangling <code class="xref py py-data docutils literal notranslate"><span class="pre">**argv</span></code>. Mandatory argument is a
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.init_prctl">
+PyMODINIT_FUNC <code class="sig-name descname">init_prctl</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.init_prctl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the module instance and add all the relevant constants to the module.
+That means all <code class="xref py py-const docutils literal notranslate"><span class="pre">PR_*</span></code>, <code class="xref py py-const docutils literal notranslate"><span class="pre">CAP_*</span></code> and <code class="xref py py-const docutils literal notranslate"><span class="pre">SECBIT_*</span></code> constants
+mentioned in <em class="manpage">prctl(2)</em> and <em class="manpage">capabilities(7)</em>. To avoid
+repeating yourself all the time, use the <code class="xref c c-macro docutils literal notranslate"><span class="pre">namedconstant</span></code> and
+<code class="xref c c-macro docutils literal notranslate"><span class="pre">namedattribute</span></code> macros when adding new values.</p>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to python-prctl’s documentation!</a><ul>
+<li><a class="reference internal" href="#downloading-and-installing">Downloading and installing</a></li>
+<li><a class="reference internal" href="#module-prctl"><code class="xref py py-mod docutils literal notranslate"><span class="pre">prctl</span></code> – Control process attributes</a></li>
+<li><a class="reference internal" href="#capabilities-and-the-capability-bounding-set">Capabilities and the capability bounding set</a></li>
+<li><a class="reference internal" href="#capabilities-and-execve">Capabilities and <code class="xref py py-func docutils literal notranslate"><span class="pre">execve()</span></code></a></li>
+<li><a class="reference internal" href="#establishing-a-capabilities-only-environment-with-securebits">Establishing a capabilities-only environment with securebits</a></li>
+<li><a class="reference internal" href="#module-_prctl"><code class="xref py py-mod docutils literal notranslate"><span class="pre">_prctl</span></code> – Basic C wrapper around prctl</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">python-prctl 1.8.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2010-2020, Dennis Kaarsemaker.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>
