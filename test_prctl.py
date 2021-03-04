@@ -199,7 +199,8 @@ class PrctlTest(unittest.TestCase):
     @require('mpx_enable_management')
     def test_mpx(self):
        """Test MPX enabling/disabling"""
-       if os.uname().release > "5.4":
+       kernel_major, kernel_minor = map(int, re.match(r'^(\d+)\.(\d+)', os.uname().release).groups())
+       if (kernel_major, kernel_minor) > (5, 4):
           self.assertRaises(OSError, prctl.mpx_enable_management)
           self.assertRaises(OSError, prctl.mpx_disable_management)
        else:
