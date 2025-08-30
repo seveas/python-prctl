@@ -120,6 +120,11 @@ class PrctlTest(unittest.TestCase):
             prctl.set_endian(prctl.ENDIAN_LITTLE)
             self.assertEqual(prctl.get_endian(), prctl.ENDIAN_LITTLE)
             self.assertRaises(ValueError, prctl.set_endian, 999)
+        if self.arch == 'ppc64le':
+            # Switching to BIG_ENDIAN crashes due to memory corruption.
+            prctl.set_endian(prctl.ENDIAN_LITTLE)
+            self.assertEqual(prctl.get_endian(), prctl.ENDIAN_LITTLE)
+            self.assertRaises(ValueError, prctl.set_endian, 999)
         else:
             self.assertRaises(OSError, prctl.get_endian)
             self.assertRaises(OSError, prctl.set_endian)
@@ -144,6 +149,12 @@ class PrctlTest(unittest.TestCase):
             prctl.set_fpexc(prctl.FP_EXC_SW_ENABLE)
             self.assertEqual(prctl.get_fpexc() & prctl.PR_FP_EXC_SW_ENABLE, prctl.PR_FP_EXC_SW_ENABLE)
             self.assertRaises(ValueError, prctl.set_fpexc, 999)
+        elif self.arch == 'ppc64le':
+            self.assertEqual(prctl.get_fpexc(), 0)
+            prctl.set_fpexc() # TODO: raises with any argument?
+            # TODO: should this really raise?
+            self.assertRaises(OSError, prctl.set_fpexc, prctl.FP_EXC_SW_ENABLE)
+            self.assertRaises(ValueError, prctl.set_fpexc, 999)
         else:
             self.assertRaises(OSError, prctl.get_fpexc)
             self.assertRaises(OSError, prctl.set_fpexc)
@@ -159,8 +170,8 @@ class PrctlTest(unittest.TestCase):
             self.assertEqual(prctl.get_fp_mode(), prctl.FP_MODE_FRE)
             self.assertRaises(ValueError, prctl.set_fp_mode, 999)
         else:
-            self.assertRaises(OSError, prctl.get_fpexc)
-            self.assertRaises(OSError, prctl.set_fpexc)
+            self.assertRaises(OSError, prctl.get_fp_mode)
+            self.assertRaises(ValueError, prctl.set_fp_mode)
 
     @require('set_io_flusher')
     def test_io_flusher(self):
@@ -233,8 +244,8 @@ class PrctlTest(unittest.TestCase):
 
     @require('pac_reset_keys')
     def test_pac_reset_keys(self):
-        if self.arch == 'arm64':
-            # FIXME untested
+        if self.arch in ('arm64', 'aarch64'):
+            # FIXME untested on arm64
             self.assertEqual(prctl.pac_reset_keys(prctl.PAC_APIAKEY), None)
             self.assertRaises(ValueError, prctl.pac_reset_keys, 0xff)
         else:
@@ -365,7 +376,7 @@ class PrctlTest(unittest.TestCase):
     @require('set_tsc')
     def test_tsc(self):
         """Test manipulation of the timestamp counter flag"""
-        if re.match('i.86|x86_64', self.arch):
+        if re.match('i.86|x86_64', self.arch) or self.arch == 'aarch64':
             prctl.set_tsc(prctl.TSC_SIGSEGV)
             self.assertEqual(prctl.get_tsc(), prctl.TSC_SIGSEGV)
             prctl.set_tsc(prctl.TSC_ENABLE)
@@ -377,8 +388,8 @@ class PrctlTest(unittest.TestCase):
 
     def test_unalign(self):
         """Test manipulation of the unaligned access setting"""
-        if self.arch in ('ia64', 'parisc', 'powerpc', 'alpha'):
-            # FIXME untested
+        if self.arch in ('ia64', 'parisc', 'powerpc', 'alpha', 'ppc64le'):
+            # FIXME untested (tested only on ppc64le)
             prctl.set_unalign(prctl.UNALIGN_NOPRINT)
             self.assertEqual(prctl.get_unalign(), prctl.UNALIGN_NOPRINT)
             prctl.set_unalign(prctl.UNALIGN_SIGBUS)
