@@ -328,6 +328,10 @@ class PrctlTest(unittest.TestCase):
        self.assertTrue(prctl.get_speculation_ctrl(prctl.SPEC_INDIRECT_BRANCH) > 0)
        self.assertRaises(ValueError, prctl.get_speculation_ctrl, 99)
        self.assertRaises(ValueError, prctl.set_speculation_ctrl, 99)
+
+       if prctl.get_speculation_ctrl(prctl.SPEC_STORE_BYPASS) & prctl.SPEC_FORCE_DISABLE:
+            self.skipTest("SPEC_STORE_BYPASS is force-disabled on this environment")
+
        prctl.set_speculation_ctrl(prctl.SPEC_STORE_BYPASS, prctl.SPEC_ENABLE)
        self.assertEqual(prctl.get_speculation_ctrl(prctl.SPEC_STORE_BYPASS) & ~prctl.SPEC_PRCTL, prctl.SPEC_ENABLE)
        prctl.set_speculation_ctrl(prctl.SPEC_STORE_BYPASS, prctl.SPEC_FORCE_DISABLE)
