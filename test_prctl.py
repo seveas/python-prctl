@@ -256,6 +256,33 @@ class PrctlTest(unittest.TestCase):
            cmdline = fd.read().rstrip('\n\0')
         self.assertEqual(cmdline, title2[:orig-1])
 
+    def test_proctitle_argument_discovery_failure(self):
+        """A bounded argument scan failure must not crash the interpreter."""
+        if sys.version_info[0] < 3:
+            return  # Python 2 gets the real argv without a bounded scan.
+        script = """
+import prctl
+with open('/proc/self/cmdline', 'rb') as stream:
+    original = stream.read()
+for attempt in range(2):
+    try:
+        prctl.set_proctitle('replacement')
+    except RuntimeError as exc:
+        assert str(exc) == 'Failed to locate argc/argv', str(exc)
+    else:
+        raise AssertionError('expected argument discovery to fail')
+with open('/proc/self/cmdline', 'rb') as stream:
+    assert stream.read() == original
+"""
+        env = os.environ.copy()
+        env['PYTHONPATH'] = os.path.abspath(builddir)
+        for length in (8192, 9000, 65536):
+            proc = subprocess.Popen([sys.executable, '-c', script, 'x' * length],
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    env=env)
+            stdout, stderr = proc.communicate()
+            self.assertEqual(proc.returncode, 0, (length, stdout, stderr))
+
     def test_pdeathsig(self):
         """Test manipulation of the pdeathsig setting"""
         self.assertRaises(ValueError, prctl.set_pdeathsig, 999)

@@ -506,7 +506,7 @@ prctl_set_proctitle(PyObject *self, PyObject *args)
     }
     if(argv == NULL)  {
         _Py_GetArgcArgv(&argc, &argv);
-        if(argc > 0) {
+        if(argc > 0 && argv != NULL) {
             len = (size_t)(argv[argc-1]) + strlen(argv[argc-1]) - (size_t)(argv[0]);
         }
     }
